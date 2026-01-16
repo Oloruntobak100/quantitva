@@ -42,10 +42,11 @@ import {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { schedule_id: string } }
+  { params }: { params: Promise<{ schedule_id: string }> }
 ) {
   try {
-    const { schedule_id } = params
+    // Next.js 16: params is now a Promise
+    const { schedule_id } = await params
     
     // Log incoming request
     logApiRequest('GET', `/api/reports/${schedule_id}`)
@@ -76,7 +77,12 @@ export async function GET(
   } catch (error) {
     // Handle unexpected errors
     const errorResponse = handleUnexpectedError(error)
-    const scheduleId = params?.schedule_id || 'unknown'
+    // Try to get schedule_id from params if available
+    let scheduleId = 'unknown'
+    try {
+      const resolvedParams = await params
+      scheduleId = resolvedParams?.schedule_id || 'unknown'
+    } catch {}
     logApiResponse('GET', `/api/reports/${scheduleId}`, 500, await errorResponse.json())
     return errorResponse
   }

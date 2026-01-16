@@ -20,23 +20,24 @@ export const getWebhooks = (): WebhookConfig[] => {
   const stored = localStorage.getItem(WEBHOOKS_KEY)
   if (!stored) {
     // Default webhooks - one for each type
+    // Note: Configure these URLs in your Settings page or update them here with your n8n webhook URLs
     const defaultWebhooks: WebhookConfig[] = [
       {
         id: '1',
         name: 'On-Demand Research Handler',
-        url: 'https://northsnow.app.n8n.cloud/webhook-test/query',
+        url: 'https://your-n8n-instance.app.n8n.cloud/webhook/on-demand',
         type: 'on-demand',
         description: 'Handles immediate market research requests',
-        active: true,
+        active: false,
         createdAt: new Date().toISOString(),
       },
       {
         id: '2',
         name: 'Recurring Research Handler',
-        url: 'https://silentminds.app.n8n.cloud/webhook-test/recurring',
+        url: 'https://your-n8n-instance.app.n8n.cloud/webhook/recurring',
         type: 'recurring',
         description: 'Handles scheduled recurring research requests',
-        active: true,
+        active: false,
         createdAt: new Date().toISOString(),
       },
     ]
