@@ -5,9 +5,26 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2 } from 'lucide-react'
-import { getReports, deleteReport, type Report } from '@/lib/reports'
+import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface Report {
+  id: string
+  scheduleId?: string
+  title: string
+  category: string
+  subNiche: string
+  geography: string
+  email: string
+  dateGenerated: string
+  type: 'On-demand' | 'Recurring'
+  webReport: string
+  emailReport: string
+  frequency?: string
+  isFirstRun?: boolean
+  runAt?: string
+  createdAt?: string
+}
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
@@ -17,17 +34,38 @@ export default function ReportsPage() {
     loadReports()
   }, [])
 
-  const loadReports = () => {
-    const allReports = getReports()
-    setReports(allReports)
-    setLoading(false)
+  const loadReports = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/reports')
+      if (!response.ok) {
+        throw new Error('Failed to fetch reports')
+      }
+      const data = await response.json()
+      setReports(data.reports || [])
+    } catch (error) {
+      console.error('Error loading reports:', error)
+      toast.error('Failed to load reports')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (confirm(`Are you sure you want to delete "${title}"?`)) {
-      deleteReport(id)
-      loadReports()
-      toast.success('Report deleted successfully')
+      try {
+        const response = await fetch(`/api/reports/${id}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) {
+          throw new Error('Failed to delete report')
+        }
+        await loadReports()
+        toast.success('Report deleted successfully')
+      } catch (error) {
+        console.error('Error deleting report:', error)
+        toast.error('Failed to delete report')
+      }
     }
   }
 
@@ -56,11 +94,23 @@ export default function ReportsPage() {
     <div className="p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Research Reports</h2>
-          <p className="text-gray-600">
-            View and analyze your generated market intelligence reports
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Research Reports</h2>
+            <p className="text-gray-600">
+              View and analyze your generated market intelligence reports
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadReports}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats */}

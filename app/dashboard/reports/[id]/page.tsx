@@ -20,7 +20,24 @@ import {
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { toast } from 'sonner'
-import { getReport, type Report } from '@/lib/reports'
+
+interface Report {
+  id: string
+  scheduleId?: string
+  title: string
+  category: string
+  subNiche: string
+  geography: string
+  email: string
+  dateGenerated: string
+  type: 'On-demand' | 'Recurring'
+  webReport: string
+  emailReport: string
+  frequency?: string
+  isFirstRun?: boolean
+  runAt?: string
+  createdAt?: string
+}
 
 export default function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -29,17 +46,25 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
-    console.log('🔄 Report page mounted, loading report ID:', id)
-    const reportData = getReport(id)
-    
-    if (reportData) {
-      console.log('✅ Report loaded successfully:', reportData)
-      setReport(reportData)
-    } else {
-      console.log('⚠️ No report found with ID:', id)
-    }
-    setLoading(false)
+    loadReport()
   }, [id])
+
+  const loadReport = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/reports/${id}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch report')
+      }
+      const data = await response.json()
+      setReport(data.report)
+    } catch (error) {
+      console.error('Error loading report:', error)
+      toast.error('Failed to load report')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true)
@@ -206,131 +231,35 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Report Content Container for PDF */}
         <div id="report-content">
-          {/* Dynamic Tabs with Intelligent Sections */}
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="trends">Trends</TabsTrigger>
-              <TabsTrigger value="competitors">Competitors</TabsTrigger>
-              <TabsTrigger value="insights">Insights</TabsTrigger>
-            </TabsList>
-
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-blue-600" />
-                    <CardTitle>Market Overview</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Comprehensive analysis of the current market landscape
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div 
-                    className="prose prose-sm max-w-none
-                      prose-headings:text-gray-900 prose-headings:font-bold
-                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
-                      prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                      prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                      prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                      prose-ul:my-4 prose-ul:space-y-2
-                      prose-li:text-gray-700
-                      prose-strong:text-gray-900 prose-strong:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: report.sections.overview }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Trends Tab */}
-            <TabsContent value="trends" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-green-600" />
-                    <CardTitle>Market Trends</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Emerging patterns and developments shaping the market
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div 
-                    className="prose prose-sm max-w-none
-                      prose-headings:text-gray-900 prose-headings:font-bold
-                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
-                      prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                      prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                      prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                      prose-ul:my-4 prose-ul:space-y-2
-                      prose-li:text-gray-700
-                      prose-strong:text-gray-900 prose-strong:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: report.sections.trends }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Competitors Tab */}
-            <TabsContent value="competitors" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-purple-600" />
-                    <CardTitle>Competitive Landscape</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Key players and competitive positioning analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div 
-                    className="prose prose-sm max-w-none
-                      prose-headings:text-gray-900 prose-headings:font-bold
-                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
-                      prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                      prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                      prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                      prose-ul:my-4 prose-ul:space-y-2
-                      prose-li:text-gray-700
-                      prose-strong:text-gray-900 prose-strong:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: report.sections.competitors }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Insights Tab */}
-            <TabsContent value="insights" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-yellow-600" />
-                    <CardTitle>Strategic Insights & Recommendations</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Key takeaways and actionable recommendations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div 
-                    className="prose prose-sm max-w-none
-                      prose-headings:text-gray-900 prose-headings:font-bold
-                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
-                      prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                      prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                      prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                      prose-ul:my-4 prose-ul:space-y-2
-                      prose-li:text-gray-700
-                      prose-strong:text-gray-900 prose-strong:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: report.sections.insights }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          {/* Full Report Content */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+                <CardTitle>Market Intelligence Report</CardTitle>
+              </div>
+              <CardDescription>
+                Comprehensive analysis of {report.category} - {report.subNiche}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div 
+                className="prose prose-sm max-w-none
+                  prose-headings:text-gray-900 prose-headings:font-bold
+                  prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
+                  prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
+                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+                  prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+                  prose-ul:my-4 prose-ul:space-y-2
+                  prose-li:text-gray-700
+                  prose-strong:text-gray-900 prose-strong:font-semibold
+                  prose-table:w-full prose-table:border-collapse
+                  prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:text-left
+                  prose-td:border prose-td:border-gray-300 prose-td:p-2"
+                dangerouslySetInnerHTML={{ __html: report.webReport }}
+              />
+            </CardContent>
+          </Card>
         </div>
         {/* End of report-content for PDF */}
       </div>
