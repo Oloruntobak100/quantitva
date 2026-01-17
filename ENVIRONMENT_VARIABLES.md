@@ -129,3 +129,4 @@ npm run dev
 - [Next.js Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables)
 - [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables)
 
++
