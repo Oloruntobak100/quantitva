@@ -34,75 +34,15 @@ import {
   TestTube2,
   Loader2,
   Zap,
-  Repeat,
-  User,
-  Mail,
-  Building2,
-  Save,
-  LogOut
+  Repeat
 } from 'lucide-react'
 import { WebhookConfig, WebhookType, getWebhooks, saveWebhooks } from '@/lib/webhooks'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth/auth-context'
 import { withAuth } from '@/lib/auth/protected-route'
 
 function SettingsPage() {
-  const { user, updateProfile, signOut } = useAuth()
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
-
-  // Profile form state
-  const [profileForm, setProfileForm] = useState({
-    full_name: '',
-    company_name: '',
-  })
-  const [profileLoading, setProfileLoading] = useState(false)
-  const [profileChanged, setProfileChanged] = useState(false)
-
-  // Initialize profile form from user data
-  useEffect(() => {
-    if (user) {
-      setProfileForm({
-        full_name: user.user_metadata?.full_name || '',
-        company_name: user.user_metadata?.company_name || '',
-      })
-    }
-  }, [user])
-
-  // Handle profile form changes
-  const handleProfileChange = (field: string, value: string) => {
-    setProfileForm(prev => ({ ...prev, [field]: value }))
-    setProfileChanged(true)
-  }
-
-  // Save profile changes
-  const handleSaveProfile = async () => {
-    setProfileLoading(true)
-    try {
-      const { error } = await updateProfile(profileForm)
-      
-      if (error) {
-        toast.error('Failed to update profile', {
-          description: error.message
-        })
-      } else {
-        toast.success('Profile updated successfully')
-        setProfileChanged(false)
-      }
-    } catch (err) {
-      toast.error('An error occurred while updating profile')
-    } finally {
-      setProfileLoading(false)
-    }
-  }
-
-  // Handle sign out
-  const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out?')) {
-      await signOut()
-    }
-  }
-
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingWebhook, setEditingWebhook] = useState<WebhookConfig | null>(null)
   const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null)
@@ -224,120 +164,11 @@ function SettingsPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
-              <p className="text-gray-600">
-                Manage your profile, webhooks and application configuration
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleSignOut} className="gap-2">
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
+          <p className="text-gray-600">
+            Manage webhooks and application configuration
+          </p>
         </div>
-
-        {/* User Profile Section */}
-        <Card className="border-2 mb-6">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <User className="w-5 h-5 text-blue-600" />
-              <CardTitle>Profile Information</CardTitle>
-            </div>
-            <CardDescription>
-              Update your personal information and account details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">Email cannot be changed</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name</Label>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
-                  <Input
-                    id="full_name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={profileForm.full_name}
-                    onChange={(e) => handleProfileChange('full_name', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="company_name">Company Name (Optional)</Label>
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  <Input
-                    id="company_name"
-                    type="text"
-                    placeholder="Your Company Inc."
-                    value={profileForm.company_name}
-                    onChange={(e) => handleProfileChange('company_name', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 pt-4">
-              <Button 
-                onClick={handleSaveProfile} 
-                disabled={!profileChanged || profileLoading}
-                className="gap-2"
-              >
-                {profileLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-              {profileChanged && (
-                <p className="text-sm text-amber-600">You have unsaved changes</p>
-              )}
-            </div>
-
-            {/* Account Info */}
-            <div className="pt-4 border-t">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-gray-500">User ID:</span>
-                  <code className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
-                    {user?.id.substring(0, 8)}...
-                  </code>
-                </div>
-                <div>
-                  <span className="text-gray-500">Created:</span>
-                  <span className="ml-2 text-gray-900">
-                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Webhook Management Section */}
         <Card className="border-2">
