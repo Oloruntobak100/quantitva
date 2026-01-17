@@ -122,19 +122,6 @@ npm run dev
 
 ## Example .env.local
 
-```env
-# Supabase Configuration
-# Get these from: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
-
-# Your Supabase project URL (find in Settings → API)
-NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
-
-# Your Supabase anon/public key (find in Settings → API)
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzNjU0NjQwMCwiZXhwIjoxOTUyMTIyNDAwfQ.example
-
-# Your Supabase service_role key (find in Settings → API) - KEEP SECRET!
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjM2NTQ2NDAwLCJleHAiOjE5NTIxMjI0MDB9.example
-```
 
 ## Additional Resources
 
