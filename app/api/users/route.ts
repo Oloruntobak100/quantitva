@@ -1,11 +1,10 @@
 // app/api/users/route.ts
-// API routes for user management (admin only)
+// API routes for user management (all authenticated users)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { supabase } from '@/lib/supabase/client'
 
-// GET all users (admin only)
+// GET all users (authenticated users)
 export async function GET(request: NextRequest) {
   try {
     // Get the authorization header
@@ -27,20 +26,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
       )
     }
 
@@ -67,7 +52,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new user (admin only)
+// POST - Create new user (authenticated users)
 export async function POST(request: NextRequest) {
   try {
     // Get the authorization header
@@ -89,20 +74,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
       )
     }
 
@@ -132,7 +103,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user in auth.users
+    // Create user in auth.users (default role is 'admin' from database)
     const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email.toLowerCase(),
       password,
@@ -150,7 +121,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update the user's role if specified
+    // Update the user's role if specified (otherwise defaults to 'admin')
     if (newAuthUser.user && role) {
       const { error: updateError } = await supabaseAdmin
         .from('users')
@@ -182,4 +153,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

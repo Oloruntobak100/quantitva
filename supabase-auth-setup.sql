@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   email TEXT NOT NULL UNIQUE,
   full_name TEXT,
   company_name TEXT,
-  role user_role DEFAULT 'user' NOT NULL,
+  role user_role DEFAULT 'admin' NOT NULL,
   last_login TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -33,7 +33,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                  WHERE table_name='users' AND column_name='role') THEN
-    ALTER TABLE users ADD COLUMN role user_role DEFAULT 'user' NOT NULL;
+    ALTER TABLE users ADD COLUMN role user_role DEFAULT 'admin' NOT NULL;
   END IF;
 END $$;
 
@@ -112,54 +112,25 @@ DROP POLICY IF EXISTS "Admins can read all users" ON users;
 DROP POLICY IF EXISTS "Admins can update all users" ON users;
 DROP POLICY IF EXISTS "Admins can delete users" ON users;
 
--- Policy: Users can read their own data
-CREATE POLICY "Users can read own data" ON users
+-- Policy: All authenticated users can read all users
+CREATE POLICY "Users can read all users" ON users
   FOR SELECT 
-  USING (auth.uid() = id);
+  USING (auth.role() = 'authenticated');
 
--- Policy: Users can update their own data (but not their role)
-CREATE POLICY "Users can update own data" ON users
+-- Policy: All authenticated users can update any user
+CREATE POLICY "Users can update all users" ON users
   FOR UPDATE 
-  USING (auth.uid() = id)
-  WITH CHECK (
-    auth.uid() = id AND 
-    role = (SELECT role FROM users WHERE id = auth.uid())
-  );
+  USING (auth.role() = 'authenticated');
 
--- Policy: Users can insert their own data
-CREATE POLICY "Users can insert own data" ON users
+-- Policy: All authenticated users can insert users
+CREATE POLICY "Users can insert users" ON users
   FOR INSERT 
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK (auth.role() = 'authenticated');
 
--- Policy: Admins can read all users
-CREATE POLICY "Admins can read all users" ON users
-  FOR SELECT 
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Policy: Admins can update all users
-CREATE POLICY "Admins can update all users" ON users
-  FOR UPDATE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Policy: Admins can delete users (except themselves)
-CREATE POLICY "Admins can delete users" ON users
+-- Policy: All authenticated users can delete users (except themselves)
+CREATE POLICY "Users can delete other users" ON users
   FOR DELETE 
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
-    ) AND id != auth.uid()
-  );
+  USING (auth.role() = 'authenticated' AND id != auth.uid());
 
 -- Policy: Service role can manage all users (for system operations)
 CREATE POLICY "Service role can manage all users" ON users

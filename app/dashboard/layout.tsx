@@ -14,7 +14,6 @@ import {
   Calendar, 
   Settings,
   LogOut,
-  Users,
   ChevronDown
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
@@ -42,8 +41,7 @@ const baseNavigation = [
   { name: 'New Research', href: '/dashboard/new-research', icon: FileSearch, adminOnly: false },
   { name: 'Reports', href: '/dashboard/reports', icon: FileText, adminOnly: false },
   { name: 'Schedules', href: '/dashboard/schedules', icon: Calendar, adminOnly: false },
-  { name: 'Users', href: '/dashboard/users', icon: Users, adminOnly: true },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings, adminOnly: false },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, adminOnly: true },
 ]
 
 export default function DashboardLayout({

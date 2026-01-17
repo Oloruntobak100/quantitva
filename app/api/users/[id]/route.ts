@@ -1,5 +1,5 @@
 // app/api/users/[id]/route.ts
-// API routes for individual user operations (admin only)
+// API routes for individual user operations (all authenticated users)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
@@ -31,20 +31,6 @@ export async function GET(
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
-      )
-    }
-
-    // Check if user is admin or requesting their own data
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || (userData?.role !== 'admin' && user.id !== id)) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
       )
     }
 
@@ -102,23 +88,6 @@ export async function PATCH(
       )
     }
 
-    // Check if user is admin or updating their own data
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const isAdmin = userData?.role === 'admin'
-    const isOwnProfile = user.id === id
-
-    if (userError || (!isAdmin && !isOwnProfile)) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
-      )
-    }
-
     // Parse request body
     const body = await request.json()
     const { email, full_name, company_name, role } = body
@@ -130,33 +99,10 @@ export async function PATCH(
 
     if (full_name !== undefined) updateData.full_name = full_name
     if (company_name !== undefined) updateData.company_name = company_name
+    if (role !== undefined) updateData.role = role
     
-    // Only admins can change roles (and can't change their own role)
-    if (role !== undefined) {
-      if (!isAdmin) {
-        return NextResponse.json(
-          { error: 'Only admins can change user roles' },
-          { status: 403 }
-        )
-      }
-      if (isOwnProfile) {
-        return NextResponse.json(
-          { error: 'Cannot change your own role' },
-          { status: 400 }
-        )
-      }
-      updateData.role = role
-    }
-
-    // Only admins can change email
+    // Check if changing email
     if (email !== undefined) {
-      if (!isAdmin) {
-        return NextResponse.json(
-          { error: 'Only admins can change email addresses' },
-          { status: 403 }
-        )
-      }
-
       // Check if email is already taken
       const { data: existingUser } = await supabaseAdmin
         .from('users')
@@ -215,7 +161,7 @@ export async function PATCH(
   }
 }
 
-// DELETE user (admin only, cannot delete self)
+// DELETE user (authenticated users, cannot delete self)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -242,20 +188,6 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
       )
     }
 
@@ -286,4 +218,3 @@ export async function DELETE(
     )
   }
 }
-
