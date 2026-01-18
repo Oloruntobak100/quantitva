@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw, Search, Filter, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Report {
@@ -26,9 +28,19 @@ interface Report {
   createdAt?: string
 }
 
+type SortOption = 'date-desc' | 'date-asc' | 'title-asc' | 'title-desc' | 'category-asc'
+
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Filter and sort state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [geographyFilter, setGeographyFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<SortOption>('date-desc')
+  const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
     loadReports()
@@ -69,7 +81,83 @@ export default function ReportsPage() {
     }
   }
 
-  // Calculate stats
+  // Get unique values for filters
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set(reports.map(r => r.category))
+    return Array.from(categories).sort()
+  }, [reports])
+
+  const uniqueGeographies = useMemo(() => {
+    const geographies = new Set(reports.map(r => r.geography))
+    return Array.from(geographies).sort()
+  }, [reports])
+
+  // Filter and sort reports
+  const filteredAndSortedReports = useMemo(() => {
+    let filtered = [...reports]
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(r => 
+        r.title.toLowerCase().includes(query) ||
+        r.category.toLowerCase().includes(query) ||
+        r.subNiche.toLowerCase().includes(query) ||
+        r.geography.toLowerCase().includes(query)
+      )
+    }
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(r => r.category === categoryFilter)
+    }
+
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(r => r.type === typeFilter)
+    }
+
+    // Apply geography filter
+    if (geographyFilter !== 'all') {
+      filtered = filtered.filter(r => r.geography === geographyFilter)
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.dateGenerated).getTime() - new Date(a.dateGenerated).getTime()
+        case 'date-asc':
+          return new Date(a.dateGenerated).getTime() - new Date(b.dateGenerated).getTime()
+        case 'title-asc':
+          return a.title.localeCompare(b.title)
+        case 'title-desc':
+          return b.title.localeCompare(a.title)
+        case 'category-asc':
+          return a.category.localeCompare(b.category)
+        default:
+          return 0
+      }
+    })
+
+    return filtered
+  }, [reports, searchQuery, categoryFilter, typeFilter, geographyFilter, sortBy])
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('')
+    setCategoryFilter('all')
+    setTypeFilter('all')
+    setGeographyFilter('all')
+    setSortBy('date-desc')
+  }
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery || categoryFilter !== 'all' || 
+                          typeFilter !== 'all' || geographyFilter !== 'all' || 
+                          sortBy !== 'date-desc'
+
+  // Calculate stats (use original reports, not filtered)
   const thisMonth = reports.filter(r => {
     const reportDate = new Date(r.dateGenerated)
     const now = new Date()
@@ -158,9 +246,135 @@ export default function ReportsPage() {
           </Card>
         </div>
 
+        {/* Search and Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            {/* Search Bar and Filter Toggle */}
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search reports by title, category, or geography..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={showFilters ? "default" : "outline"}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="gap-2 whitespace-nowrap"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filters
+                  {hasActiveFilters && !showFilters && (
+                    <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                      Active
+                    </Badge>
+                  )}
+                </Button>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    onClick={clearFilters}
+                    className="gap-2 whitespace-nowrap"
+                  >
+                    <X className="w-4 h-4" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Filter Options (collapsible) */}
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Category
+                  </label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {uniqueCategories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Type
+                  </label>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="On-demand">On-demand</SelectItem>
+                      <SelectItem value="Recurring">Recurring</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Geography
+                  </label>
+                  <Select value={geographyFilter} onValueChange={setGeographyFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All geographies" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Geographies</SelectItem>
+                      {uniqueGeographies.map(geo => (
+                        <SelectItem key={geo} value={geo}>{geo}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Sort By
+                  </label>
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date-desc">Date (Newest First)</SelectItem>
+                      <SelectItem value="date-asc">Date (Oldest First)</SelectItem>
+                      <SelectItem value="title-asc">Title (A-Z)</SelectItem>
+                      <SelectItem value="title-desc">Title (Z-A)</SelectItem>
+                      <SelectItem value="category-asc">Category (A-Z)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Results count */}
+            <div className="mt-4 text-sm text-gray-600">
+              Showing {filteredAndSortedReports.length} of {reports.length} reports
+              {hasActiveFilters && (
+                <span className="ml-2 text-blue-600 font-medium">
+                  (filtered)
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Reports List */}
         <div className="space-y-4">
-          {reports.map((report) => (
+          {filteredAndSortedReports.map((report) => (
             <Card key={report.id} className="hover:border-blue-300 transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">
@@ -229,7 +443,27 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* Empty State (hidden when reports exist) */}
+        {/* Empty State */}
+        {filteredAndSortedReports.length === 0 && reports.length > 0 && (
+          <Card className="border-2 border-dashed">
+            <CardContent className="py-16 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No reports match your filters
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Try adjusting your search or filter criteria
+              </p>
+              <Button onClick={clearFilters} variant="outline">
+                Clear All Filters
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No Reports at All */}
         {reports.length === 0 && (
           <Card className="border-2 border-dashed">
             <CardContent className="py-16 text-center">
