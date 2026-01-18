@@ -13,12 +13,9 @@ import {
   MapPin, 
   Target,
   BarChart3,
-  Download,
   Share2,
   Mail
 } from 'lucide-react'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
 import { toast } from 'sonner'
 
 interface Report {
@@ -43,7 +40,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const [report, setReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
     loadReport()
@@ -63,79 +59,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
       toast.error('Failed to load report')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleDownloadPDF = async () => {
-    if (!report) return
-    
-    setIsDownloading(true)
-    try {
-      const reportElement = document.getElementById('report-content')
-      if (!reportElement) {
-        toast.error('Report content not found')
-        return
-      }
-
-      toast.info('Generating PDF...', {
-        description: 'This may take a moment for large reports.'
-      })
-
-      // Create canvas from HTML
-      const canvas = await html2canvas(reportElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: reportElement.scrollWidth,
-        windowHeight: reportElement.scrollHeight
-      })
-
-      // Calculate dimensions
-      const imgWidth = 210 // A4 width in mm
-      const pageHeight = 297 // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      let heightLeft = imgHeight
-      let position = 0
-
-      // Initialize jsPDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
-
-      const imgData = canvas.toDataURL('image/png')
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST')
-      heightLeft -= pageHeight
-
-      // Add additional pages if content is longer than one page
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST')
-        heightLeft -= pageHeight
-      }
-
-      // Generate filename
-      const sanitizedTitle = report.title.replace(/[^a-z0-9]/gi, '_')
-      const fileName = `${sanitizedTitle}_${new Date().toISOString().split('T')[0]}.pdf`
-      
-      // Download PDF
-      pdf.save(fileName)
-      
-      toast.success('PDF downloaded successfully!', {
-        description: 'Your report has been saved to your downloads folder.'
-      })
-    } catch (error) {
-      console.error('PDF generation error:', error)
-      toast.error('Failed to generate PDF', {
-        description: 'Please try again or contact support if the issue persists.'
-      })
-    } finally {
-      setIsDownloading(false)
     }
   }
 
@@ -270,17 +193,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
               </div>
 
               <div className="flex gap-2">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                >
-                  <Download className="w-4 h-4" />
-                  {isDownloading ? 'Generating...' : 'Download PDF'}
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
+                <Button variant="default" size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />
                   Share
                 </Button>
@@ -289,10 +202,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
           </CardContent>
         </Card>
 
-        {/* Report Content Container for PDF */}
-        <div id="report-content">
-          {/* Full Report Content */}
-          <Card>
+        {/* Report Content */}
+        <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-600" />
@@ -320,8 +231,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
               />
             </CardContent>
           </Card>
-        </div>
-        {/* End of report-content for PDF */}
       </div>
     </div>
   )
