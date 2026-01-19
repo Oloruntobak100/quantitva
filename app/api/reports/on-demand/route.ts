@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 
 export interface OnDemandReportRequest {
+  user_id: string  // CRITICAL: Required for multi-user isolation
   industry: string
   sub_niche: string
   geography: string
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const errors: string[] = []
+    if (!body.user_id) errors.push('user_id is required')
     if (!body.industry) errors.push('industry is required')
     if (!body.sub_niche) errors.push('sub_niche is required')
     if (!body.email) errors.push('email is required')
@@ -46,12 +48,13 @@ export async function POST(request: NextRequest) {
     // Generate unique execution ID
     const execution_id = `ondemand_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
-    // Save to Supabase reports table
+    // Save to Supabase reports table with user_id
     const { data: report, error: insertError } = await supabaseAdmin
       .from('reports')
       .insert({
         execution_id,
         schedule_id: null, // On-demand reports don't have a schedule
+        user_id: body.user_id, // CRITICAL: User isolation
         industry: body.industry,
         sub_niche: body.sub_niche,
         frequency: 'on-demand',

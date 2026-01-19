@@ -15,6 +15,7 @@ import { getActiveWebhooksByType } from '@/lib/webhooks'
 import { toast } from 'sonner'
 import { LoadingOverlay } from '@/components/LoadingOverlay'
 import { createScheduleFromForm, saveSchedule } from '@/lib/schedules'
+import { supabase } from '@/lib/supabase/client'
 
 const marketCategories = [
   'Technology & Software',
@@ -153,6 +154,19 @@ export default function NewResearchPage() {
     console.log('🚀 On-Demand Research submission started')
     
     try {
+      // ===== STEP 1: GET AUTHENTICATED USER =====
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        toast.error('Authentication required', {
+          description: 'You must be logged in to create a report. Please sign in and try again.',
+        })
+        setIsSubmitting(false)
+        return
+      }
+      
+      console.log('✅ Authenticated user:', user.id, user.email)
+      
       // Get active on-demand webhooks
       const activeWebhooks = getActiveWebhooksByType('on-demand')
       
@@ -162,10 +176,11 @@ export default function NewResearchPage() {
         toast.warning('No active on-demand webhooks', {
           description: 'Please configure an on-demand webhook in Settings.',
         })
+        setIsSubmitting(false)
         return
       }
       
-      // Send data to all active on-demand webhooks
+      // ===== STEP 2: SEND DATA WITH USER ID TO WEBHOOK =====
       const webhookPromises = activeWebhooks.map(async (webhook) => {
         console.log(`📤 Sending to webhook: ${webhook.url}`)
         
@@ -175,6 +190,11 @@ export default function NewResearchPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            // ===== CRITICAL: USER TRACKING =====
+            userId: user.id,
+            userEmail: user.email,
+            
+            // Form data
             ...onDemandForm,
             submittedAt: new Date().toISOString(),
             webhookName: webhook.name,
@@ -236,6 +256,10 @@ export default function NewResearchPage() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
+                // ===== CRITICAL: USER ID =====
+                user_id: user.id,
+                
+                // Report data
                 industry: onDemandForm.marketCategory,
                 sub_niche: onDemandForm.subNiche,
                 geography: onDemandForm.geography || 'Global',
@@ -302,6 +326,19 @@ export default function NewResearchPage() {
     console.log('📅 Frequency:', recurringForm.frequency)
     
     try {
+      // ===== STEP 1: GET AUTHENTICATED USER =====
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        toast.error('Authentication required', {
+          description: 'You must be logged in to create a schedule. Please sign in and try again.',
+        })
+        setIsSubmitting(false)
+        return
+      }
+      
+      console.log('✅ Authenticated user:', user.id, user.email)
+      
       // Get active recurring webhooks
       const activeWebhooks = getActiveWebhooksByType('recurring')
       
@@ -315,16 +352,24 @@ export default function NewResearchPage() {
         return
       }
 
-      // Send data to recurring webhook(s) and wait for response
+      // ===== STEP 2: SEND DATA WITH USER ID TO WEBHOOK =====
       const webhookPromises = activeWebhooks.map(async (webhook) => {
         console.log(`📤 Sending to recurring webhook: ${webhook.url}`)
-        console.log('📦 Payload:', {
+        
+        const webhookPayload = {
+          // ===== CRITICAL: USER TRACKING =====
+          userId: user.id,
+          userEmail: user.email,
+          
+          // Form data
           ...recurringForm,
           submittedAt: new Date().toISOString(),
           webhookName: webhook.name,
           researchType: 'recurring',
           isInitialRun: true,
-        })
+        }
+        
+        console.log('📦 Payload:', webhookPayload)
         
         try {
           const response = await fetch(webhook.url, {
@@ -332,13 +377,7 @@ export default function NewResearchPage() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              ...recurringForm,
-              submittedAt: new Date().toISOString(),
-              webhookName: webhook.name,
-              researchType: 'recurring',
-              isInitialRun: true,
-            }),
+            body: JSON.stringify(webhookPayload),
           })
           
           console.log(`📥 Response status from ${webhook.name}:`, response.status)

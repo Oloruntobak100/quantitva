@@ -20,6 +20,7 @@ export async function saveExecutionLog(log: ExecutionLog): Promise<void> {
       .insert({
         execution_id: log.execution_id,
         schedule_id: log.schedule_id,
+        user_id: log.user_id, // CRITICAL: User isolation
         industry: log.industry,
         sub_niche: log.sub_niche,
         frequency: log.frequency,

@@ -19,6 +19,24 @@ export function validateReportRunRequest(payload: any): ValidationError[] {
     return errors
   }
 
+  // Validate user_id (CRITICAL for security)
+  if (!payload.user_id) {
+    errors.push({
+      field: 'user_id',
+      message: 'user_id is required'
+    })
+  } else if (typeof payload.user_id !== 'string') {
+    errors.push({
+      field: 'user_id',
+      message: 'user_id must be a string'
+    })
+  } else if (payload.user_id.trim().length === 0) {
+    errors.push({
+      field: 'user_id',
+      message: 'user_id cannot be empty'
+    })
+  }
+
   // Validate schedule_id
   if (!payload.schedule_id) {
     errors.push({

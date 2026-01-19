@@ -2,18 +2,47 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
+    // ===== STEP 1: AUTHENTICATE USER =====
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', details: 'You must be logged in to access reports' },
+        { status: 401 }
+      )
+    }
+    
+    console.log('✅ Authenticated user for reports:', user.id)
+    
     // Get optional parameters from query params
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
     const scheduleId = searchParams.get('schedule_id') // Optional filter by schedule
 
-    // Build query
+    // ===== STEP 2: BUILD QUERY WITH USER FILTER =====
     let query = supabaseAdmin
       .from('reports')
       .select('*')
+      .eq('user_id', user.id) // CRITICAL: Only fetch user's own reports
       .order('run_at', { ascending: false })
       .limit(limit)
 

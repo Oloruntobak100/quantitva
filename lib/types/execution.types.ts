@@ -6,6 +6,7 @@
 export interface ExecutionLog {
   execution_id: string
   schedule_id: string
+  user_id: string // CRITICAL: User isolation
   industry: string
   sub_niche: string
   frequency: string
@@ -34,6 +35,7 @@ export interface ScheduleMetadata {
  */
 export interface ReportRunRequest {
   schedule_id: string
+  user_id: string // CRITICAL: User isolation
   industry: string
   sub_niche: string
   frequency: string

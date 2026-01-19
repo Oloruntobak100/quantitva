@@ -43,6 +43,7 @@ export async function processReportRun(request: ReportRunRequest): Promise<Repor
     const executionLog: ExecutionLog = {
       execution_id: generateExecutionId(),
       schedule_id: request.schedule_id,
+      user_id: request.user_id, // CRITICAL: User isolation
       industry: request.industry,
       sub_niche: request.sub_niche,
       frequency: request.frequency,
