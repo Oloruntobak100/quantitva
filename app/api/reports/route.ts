@@ -2,33 +2,73 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    // ===== STEP 1: AUTHENTICATE USER =====
+    // ===== STEP 1: GET USER FROM AUTHORIZATION HEADER OR COOKIES =====
     const cookieStore = await cookies()
     
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-        },
-      }
-    )
+    // Try to get token from Authorization header first
+    const authHeader = request.headers.get('authorization')
+    let accessToken = authHeader?.replace('Bearer ', '')
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // If no header, try cookies with various possible names
+    if (!accessToken) {
+      // Get all cookies and log them for debugging
+      const allCookies = cookieStore.getAll()
+      console.log('🍪 Available cookies:', allCookies.map(c => c.name))
+      
+      // Try common Supabase cookie patterns
+      const authCookie = allCookies.find(c => 
+        c.name.includes('auth') || 
+        c.name.includes('supabase') ||
+        c.name.includes('sb-')
+      )
+      
+      if (authCookie) {
+        console.log('🍪 Found auth cookie:', authCookie.name)
+        // If it's a JSON cookie, try to parse it
+        try {
+          const parsed = JSON.parse(authCookie.value)
+          accessToken = parsed.access_token || parsed.accessToken
+        } catch {
+          accessToken = authCookie.value
+        }
+      }
+    }
+    
+    if (!accessToken) {
+      console.log('❌ No access token found - available cookies:', cookieStore.getAll().map(c => c.name).join(', '))
+      
+      // TEMPORARY: Return empty list instead of 401 to debug
+      return NextResponse.json({
+        success: true,
+        total: 0,
+        reports: [],
+        debug: {
+          message: 'No authentication - please login',
+          cookies: cookieStore.getAll().map(c => ({ name: c.name, hasValue: !!c.value }))
+        }
+      })
+    }
+    
+    // Verify token and get user
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken)
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', details: 'You must be logged in to access reports' },
-        { status: 401 }
-      )
+      console.log('❌ Auth error:', authError?.message || 'No user found')
+      
+      // TEMPORARY: Return empty list to debug
+      return NextResponse.json({
+        success: true,
+        total: 0,
+        reports: [],
+        debug: {
+          message: 'Authentication failed',
+          error: authError?.message
+        }
+      })
     }
     
     console.log('✅ Authenticated user for reports:', user.id)
@@ -101,17 +141,41 @@ export async function GET(request: NextRequest) {
       createdAt: report.created_at,
     }))
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       total: transformedReports.length,
       reports: transformedReports
     })
+    
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    
+    return response
   } catch (error) {
     console.error('Unexpected error in GET /api/reports:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
+    const errorResponse = NextResponse.json(
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
+    
+    // Add CORS headers to error response too
+    errorResponse.headers.set('Access-Control-Allow-Origin', '*')
+    
+    return errorResponse
   }
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 200 })
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
 }
 
