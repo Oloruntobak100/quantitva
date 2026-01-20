@@ -2,100 +2,62 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    // ===== TEMPORARY: BYPASS AUTH FOR DEBUGGING =====
-    const BYPASS_AUTH = true  // Set to false once auth is fixed
-    const DEFAULT_USER_ID = 'a4ee9aa8-e761-4061-a3ed-b24def49e8c1' // Your user ID
+    // ===== STEP 1: CREATE SUPABASE CLIENT WITH COOKIES =====
+    const cookieStore = await cookies()
     
-    let user: any = null
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options)
+          },
+          remove(name: string, options: any) {
+            cookieStore.set(name, '', options)
+          },
+        },
+      }
+    )
     
-    if (BYPASS_AUTH) {
-      console.log('🐛 DEBUG MODE: Bypassing authentication')
-      user = { id: DEFAULT_USER_ID, email: 'kaytoba70@gmail.com' }
-    } else {
-      // ===== STEP 1: GET USER FROM AUTHORIZATION HEADER OR COOKIES =====
-      const cookieStore = await cookies()
-      
-      // Try to get token from Authorization header first
-      const authHeader = request.headers.get('authorization')
-      let accessToken = authHeader?.replace('Bearer ', '')
-      
-      // If no header, try cookies with various possible names
-      if (!accessToken) {
-        // Get all cookies and log them for debugging
-        const allCookies = cookieStore.getAll()
-        console.log('🍪 Available cookies:', allCookies.map(c => c.name))
-        
-        // Try common Supabase cookie patterns
-        const authCookie = allCookies.find(c => 
-          c.name.includes('auth') || 
-          c.name.includes('supabase') ||
-          c.name.includes('sb-')
-        )
-        
-        if (authCookie) {
-          console.log('🍪 Found auth cookie:', authCookie.name)
-          // If it's a JSON cookie, try to parse it
-          try {
-            const parsed = JSON.parse(authCookie.value)
-            accessToken = parsed.access_token || parsed.accessToken
-          } catch {
-            accessToken = authCookie.value
-          }
-        }
-      }
-      
-      if (!accessToken) {
-        console.log('❌ No access token found')
-        return NextResponse.json({
-          success: true,
-          total: 0,
-          reports: [],
-          debug: {
-            message: 'No authentication - please login',
-            cookies: cookieStore.getAll().map(c => ({ name: c.name, hasValue: !!c.value }))
-          }
-        })
-      }
-      
-      // Verify token and get user
-      const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(accessToken)
-      
-      if (authError || !userData?.user) {
-        console.log('❌ Auth error:', authError?.message || 'No user found')
-        return NextResponse.json({
-          success: true,
-          total: 0,
-          reports: [],
-          debug: {
-            message: 'Authentication failed',
-            error: authError?.message
-          }
-        })
-      }
-      
-      user = userData.user
+    // ===== STEP 2: GET AUTHENTICATED USER =====
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.log('❌ Auth error:', authError?.message || 'No user found')
+      return NextResponse.json(
+        { 
+          error: 'Unauthorized', 
+          details: 'You must be logged in to access reports',
+          hint: 'Please login and try again'
+        },
+        { status: 401 }
+      )
     }
     
-    console.log('✅ User for reports:', user.id)
+    console.log('✅ Authenticated user for reports:', user.id, user.email)
     
-    // ===== STEP 2: CHECK USER ROLE =====
-    // Check if user is admin by querying user metadata or role
+    // ===== STEP 3: CHECK USER ROLE =====
     const isAdmin = user.user_metadata?.role === 'admin' || 
                     user.app_metadata?.role === 'admin' ||
-                    user.email === 'admin@quantitva.com' // Fallback admin email check
+                    user.email === 'admin@quantitva.com'
     
-    console.log(`🔐 User role: ${isAdmin ? 'ADMIN' : 'USER'}`)
+    console.log(`🔐 User role: ${isAdmin ? 'ADMIN' : 'USER'} for ${user.email}`)
     
-    // Get optional parameters from query params
+    // ===== STEP 4: GET QUERY PARAMETERS =====
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
-    const scheduleId = searchParams.get('schedule_id') // Optional filter by schedule
+    const scheduleId = searchParams.get('schedule_id')
 
-    // ===== STEP 3: BUILD QUERY WITH ROLE-BASED ACCESS =====
+    // ===== STEP 5: BUILD QUERY WITH ROLE-BASED ACCESS =====
     let query = supabaseAdmin
       .from('reports')
       .select('*')
