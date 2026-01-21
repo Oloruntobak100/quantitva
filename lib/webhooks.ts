@@ -20,7 +20,8 @@ export const getWebhooks = (): WebhookConfig[] => {
   const stored = localStorage.getItem(WEBHOOKS_KEY)
   if (!stored) {
     // Default webhooks - one for each type
-    // Note: Configure these URLs in your Settings page or update them here with your n8n webhook URLs
+    // Active by default so all users (including non-admins) can use core features
+    // Admins can configure URLs in Settings page
     const defaultWebhooks: WebhookConfig[] = [
       {
         id: '1',
@@ -28,7 +29,7 @@ export const getWebhooks = (): WebhookConfig[] => {
         url: 'https://your-n8n-instance.app.n8n.cloud/webhook/on-demand',
         type: 'on-demand',
         description: 'Handles immediate market research requests',
-        active: false,
+        active: true,
         createdAt: new Date().toISOString(),
       },
       {
@@ -37,7 +38,7 @@ export const getWebhooks = (): WebhookConfig[] => {
         url: 'https://your-n8n-instance.app.n8n.cloud/webhook/recurring',
         type: 'recurring',
         description: 'Handles scheduled recurring research requests',
-        active: false,
+        active: true,
         createdAt: new Date().toISOString(),
       },
     ]
