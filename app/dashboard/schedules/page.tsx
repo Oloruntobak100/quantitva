@@ -4,48 +4,119 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Clock, MapPin, Mail, Trash2, Play, Pause, Plus } from 'lucide-react'
-import { 
-  getSchedules, 
-  deleteSchedule, 
-  toggleScheduleActive,
-  formatFrequency,
-  formatDate,
-  type Schedule 
-} from '@/lib/schedules'
+import { Calendar, Clock, MapPin, Mail, Trash2, Play, Pause, Plus, RefreshCw, TrendingUp, Repeat, BarChart } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+
+interface SupabaseSchedule {
+  id: string
+  schedule_id: string
+  user_id: string
+  title: string
+  industry: string
+  sub_niche: string
+  geography: string
+  email: string
+  frequency: string
+  notes: string
+  active: boolean
+  last_run: string | null
+  next_run: string
+  execution_count: number
+  created_at: string
+  updated_at: string
+}
 
 export default function SchedulesPage() {
-  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [schedules, setSchedules] = useState<SupabaseSchedule[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; schedule: SupabaseSchedule | null }>({
+    open: false,
+    schedule: null
+  })
+  const [pauseDialog, setPauseDialog] = useState<{ open: boolean; schedule: SupabaseSchedule | null }>({
+    open: false,
+    schedule: null
+  })
 
   useEffect(() => {
     loadSchedules()
   }, [])
 
-  const loadSchedules = () => {
-    setIsLoading(true)
-    const loadedSchedules = getSchedules()
-    setSchedules(loadedSchedules)
-    setIsLoading(false)
+  const loadSchedules = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/schedules/active')
+      const data = await response.json()
+      
+      if (response.ok) {
+        // Include both active and inactive schedules
+        const allSchedulesResponse = await fetch('/api/schedules/all')
+        const allData = await allSchedulesResponse.json()
+        setSchedules(allData.schedules || [])
+      } else {
+        toast.error('Failed to load schedules')
+      }
+    } catch (error) {
+      console.error('Error loading schedules:', error)
+      toast.error('Failed to load schedules')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleToggleActive = (id: string) => {
-    toggleScheduleActive(id)
-    loadSchedules()
-    toast.success('Schedule updated', {
-      description: 'Schedule status changed successfully.',
-    })
+  const handleToggleActive = async (schedule: SupabaseSchedule) => {
+    try {
+      const endpoint = schedule.active 
+        ? `/api/schedules/${schedule.id}/pause` 
+        : `/api/schedules/${schedule.id}/resume`
+      
+      const response = await fetch(endpoint, { method: 'POST' })
+      
+      if (response.ok) {
+        await loadSchedules()
+        toast.success(
+          schedule.active ? 'Schedule paused' : 'Schedule resumed',
+          {
+            description: schedule.active 
+              ? 'Reports will not be generated until resumed' 
+              : 'Reports will be generated on schedule'
+          }
+        )
+        setPauseDialog({ open: false, schedule: null })
+      } else {
+        throw new Error('Failed to update schedule')
+      }
+    } catch (error) {
+      console.error('Error updating schedule:', error)
+      toast.error('Failed to update schedule')
+    }
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this schedule?')) {
-      deleteSchedule(id)
-      loadSchedules()
-      toast.success('Schedule deleted', {
-        description: 'The schedule has been removed.',
-      })
+  const handleDelete = async (schedule: SupabaseSchedule) => {
+    try {
+      const response = await fetch(`/api/schedules/${schedule.id}`, { method: 'DELETE' })
+      
+      if (response.ok) {
+        await loadSchedules()
+        toast.success('Schedule deleted', {
+          description: 'The schedule has been permanently removed'
+        })
+        setDeleteDialog({ open: false, schedule: null })
+      } else {
+        throw new Error('Failed to delete schedule')
+      }
+    } catch (error) {
+      console.error('Error deleting schedule:', error)
+      toast.error('Failed to delete schedule')
     }
   }
 
@@ -62,6 +133,9 @@ export default function SchedulesPage() {
     )
   }
 
+  // Calculate total executions
+  const totalExecutions = schedules.reduce((sum, s) => sum + (s.execution_count || 0), 0)
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -72,50 +146,109 @@ export default function SchedulesPage() {
             Manage your recurring market research schedules
           </p>
         </div>
-        <Link href="/dashboard/new-research">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            New Schedule
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={loadSchedules}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
-        </Link>
+          <Link href="/dashboard/new-research">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              New Schedule
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <Card>
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <Card className="border-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Schedules
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Total Schedules
+              </CardTitle>
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Repeat className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{schedules.length}</div>
+            {isLoading ? (
+              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+            ) : (
+              <div className="text-4xl font-bold text-gray-900">{schedules.length}</div>
+            )}
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-2 border-green-200 bg-green-50/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Active Schedules
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Active Schedules
+              </CardTitle>
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Play className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {activeSchedules.length}
-            </div>
+            {isLoading ? (
+              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+            ) : (
+              <div className="text-4xl font-bold text-green-600">
+                {activeSchedules.length}
+              </div>
+            )}
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Paused Schedules
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Paused Schedules
+              </CardTitle>
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Pause className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-400">
-              {inactiveSchedules.length}
+            {isLoading ? (
+              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+            ) : (
+              <div className="text-4xl font-bold text-gray-500">
+                {inactiveSchedules.length}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-purple-200 bg-purple-50/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Total Executions
+              </CardTitle>
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <BarChart className="w-5 h-5 text-purple-600" />
+              </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+            ) : (
+              <div className="text-4xl font-bold text-purple-600">
+                {totalExecutions}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -144,7 +277,8 @@ export default function SchedulesPage() {
       {/* Active Schedules */}
       {activeSchedules.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Play className="w-5 h-5 text-green-600" />
             Active Schedules ({activeSchedules.length})
           </h3>
           <div className="space-y-4">
@@ -152,8 +286,8 @@ export default function SchedulesPage() {
               <ScheduleCard
                 key={schedule.id}
                 schedule={schedule}
-                onToggleActive={handleToggleActive}
-                onDelete={handleDelete}
+                onPause={() => setPauseDialog({ open: true, schedule })}
+                onDelete={() => setDeleteDialog({ open: true, schedule })}
               />
             ))}
           </div>
@@ -163,7 +297,8 @@ export default function SchedulesPage() {
       {/* Inactive Schedules */}
       {inactiveSchedules.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Pause className="w-5 h-5 text-gray-600" />
             Paused Schedules ({inactiveSchedules.length})
           </h3>
           <div className="space-y-4">
@@ -171,50 +306,150 @@ export default function SchedulesPage() {
               <ScheduleCard
                 key={schedule.id}
                 schedule={schedule}
-                onToggleActive={handleToggleActive}
-                onDelete={handleDelete}
+                onPause={() => setPauseDialog({ open: true, schedule })}
+                onDelete={() => setDeleteDialog({ open: true, schedule })}
               />
             ))}
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, schedule: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Schedule</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteDialog.schedule?.title}"? This action cannot be undone.
+              Past reports will remain accessible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialog({ open: false, schedule: null })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteDialog.schedule && handleDelete(deleteDialog.schedule)}
+            >
+              Delete Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pause/Resume Confirmation Dialog */}
+      <Dialog open={pauseDialog.open} onOpenChange={(open) => setPauseDialog({ open, schedule: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {pauseDialog.schedule?.active ? 'Pause' : 'Resume'} Schedule
+            </DialogTitle>
+            <DialogDescription>
+              {pauseDialog.schedule?.active ? (
+                <>
+                  Are you sure you want to pause "{pauseDialog.schedule?.title}"?
+                  No reports will be generated until you resume it.
+                </>
+              ) : (
+                <>
+                  Resume "{pauseDialog.schedule?.title}"?
+                  Reports will be generated according to the schedule.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPauseDialog({ open: false, schedule: null })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => pauseDialog.schedule && handleToggleActive(pauseDialog.schedule)}
+            >
+              {pauseDialog.schedule?.active ? 'Pause' : 'Resume'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 function ScheduleCard({ 
   schedule, 
-  onToggleActive, 
+  onPause, 
   onDelete 
 }: { 
-  schedule: Schedule
-  onToggleActive: (id: string) => void
-  onDelete: (id: string) => void
+  schedule: SupabaseSchedule
+  onPause: () => void
+  onDelete: () => void
 }) {
+  // Calculate time until next run
+  const getTimeUntilNextRun = () => {
+    if (!schedule.next_run) return 'Not scheduled'
+    const now = new Date()
+    const nextRun = new Date(schedule.next_run)
+    const diffMs = nextRun.getTime() - now.getTime()
+    
+    if (diffMs < 0) return 'Overdue'
+    
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffHours / 24)
+    
+    if (diffDays > 1) return `in ${diffDays} days`
+    if (diffHours > 1) return `in ${diffHours} hours`
+    return 'Soon'
+  }
+
   return (
-    <Card className={schedule.active ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50/30'}>
+    <Card className={`border-2 transition-all hover:shadow-md ${
+      schedule.active 
+        ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-emerald-50/30' 
+        : 'border-gray-200 bg-gray-50/50'
+    }`}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <CardTitle className="text-xl">{schedule.title}</CardTitle>
-              <Badge variant={schedule.active ? 'default' : 'secondary'}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <CardTitle className="text-xl truncate">{schedule.title}</CardTitle>
+              <Badge 
+                variant={schedule.active ? 'default' : 'secondary'}
+                className={schedule.active ? 'bg-green-600' : ''}
+              >
                 {schedule.active ? 'Active' : 'Paused'}
               </Badge>
-              <Badge variant="outline" className="bg-white">
-                {formatFrequency(schedule.frequency)}
+              <Badge variant="outline" className="bg-white capitalize">
+                {schedule.frequency}
               </Badge>
+              {schedule.execution_count > 0 && (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {schedule.execution_count} runs
+                </Badge>
+              )}
             </div>
-            <CardDescription className="text-sm">
-              {schedule.subNiche}
+            <CardDescription className="text-sm flex items-center gap-2">
+              <span>{schedule.industry}</span>
+              <span className="text-gray-400">•</span>
+              <span>{schedule.sub_niche}</span>
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onToggleActive(schedule.id)}
-              className="gap-2"
+              onClick={onPause}
+              className={`gap-2 ${
+                schedule.active 
+                  ? 'hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300' 
+                  : 'hover:bg-green-50 hover:text-green-700 hover:border-green-300'
+              }`}
             >
               {schedule.active ? (
                 <>
@@ -231,8 +466,8 @@ function ScheduleCard({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDelete(schedule.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={onDelete}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -240,39 +475,53 @@ function ScheduleCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{schedule.geography}</span>
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span className="capitalize">{schedule.geography}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Mail className="w-4 h-4" />
-              <span>{schedule.email}</span>
+              <Mail className="w-4 h-4 text-gray-400" />
+              <span className="truncate">{schedule.email}</span>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span>Created: {new Date(schedule.createdAt).toLocaleDateString()}</span>
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span>Created {new Date(schedule.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Clock className="w-4 h-4" />
-              <span>
-                Next run: {new Date(schedule.nextRun).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit'
-                })}
-              </span>
+            {schedule.last_run && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="w-4 h-4 text-gray-400" />
+                <span>Last run {new Date(schedule.last_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 text-sm">
+              <Clock className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-medium text-gray-900">Next Run</div>
+                <div className="text-gray-600">
+                  {new Date(schedule.next_run).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })}
+                </div>
+                <div className="text-xs text-blue-600 font-medium mt-0.5">
+                  {getTimeUntilNextRun()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
         {schedule.notes && (
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Notes:</span> {schedule.notes}
+              <span className="font-medium text-gray-700">Notes:</span> {schedule.notes}
             </p>
           </div>
         )}
