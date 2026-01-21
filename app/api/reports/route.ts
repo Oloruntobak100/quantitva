@@ -48,7 +48,8 @@ export async function GET(request: NextRequest) {
     // ===== STEP 3: CHECK USER ROLE =====
     const isAdmin = user.user_metadata?.role === 'admin' || 
                     user.app_metadata?.role === 'admin' ||
-                    user.email === 'admin@quantitva.com'
+                    user.email === 'admin@quantitva.com' ||
+                    user.email === 'pat2echo@gmail.com' // Super Admin
     
     console.log(`🔐 User role: ${isAdmin ? 'ADMIN' : 'USER'} for ${user.email}`)
     
@@ -58,9 +59,14 @@ export async function GET(request: NextRequest) {
     const scheduleId = searchParams.get('schedule_id')
 
     // ===== STEP 5: BUILD QUERY WITH ROLE-BASED ACCESS =====
+    // For admins, join with users table to get user information
+    const selectFields = isAdmin 
+      ? '*, users:user_id(id, email, full_name, company_name)'
+      : '*'
+    
     let query = supabaseAdmin
       .from('reports')
-      .select('*')
+      .select(selectFields)
     
     // ADMINS: See all reports
     // USERS: See only their own reports (strict isolation)
@@ -68,7 +74,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('user_id', user.id) // ← STRICT: Only user's reports
       console.log('👤 USER mode: Filtering by user_id =', user.id)
     } else {
-      console.log('👑 ADMIN mode: Fetching ALL reports')
+      console.log('👑 ADMIN mode: Fetching ALL reports with user information')
     }
     
     query = query.order('run_at', { ascending: false }).limit(limit)
@@ -90,32 +96,49 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform reports to match the frontend Report interface
-    const transformedReports = (reports || []).map((report) => ({
-      id: report.execution_id,
-      scheduleId: report.schedule_id,
-      title: `${report.industry} - ${report.sub_niche}`,
-      category: report.industry,
-      subNiche: report.sub_niche,
-      geography: report.geography || 'Global',
-      email: report.email || '',
-      dateGenerated: new Date(report.run_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-      type: report.frequency === 'on-demand' ? 'On-demand' : 'Recurring',
-      webReport: report.final_report || '',
-      emailReport: report.email_report || report.final_report || '',
-      frequency: report.frequency,
-      isFirstRun: report.is_first_run,
-      runAt: report.run_at,
-      createdAt: report.created_at,
-    }))
+    const transformedReports = (reports || []).map((report) => {
+      const baseReport = {
+        id: report.execution_id,
+        scheduleId: report.schedule_id,
+        title: `${report.industry} - ${report.sub_niche}`,
+        category: report.industry,
+        subNiche: report.sub_niche,
+        geography: report.geography || 'Global',
+        email: report.email || '',
+        dateGenerated: new Date(report.run_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        type: report.frequency === 'on-demand' ? 'On-demand' : 'Recurring',
+        webReport: report.final_report || '',
+        emailReport: report.email_report || report.final_report || '',
+        frequency: report.frequency,
+        isFirstRun: report.is_first_run,
+        runAt: report.run_at,
+        createdAt: report.created_at,
+      }
+
+      // Add user information for admins
+      if (isAdmin && report.users) {
+        return {
+          ...baseReport,
+          userId: report.user_id,
+          userEmail: report.users.email || 'Unknown',
+          userName: report.users.full_name || 'Unknown User',
+          userCompany: report.users.company_name || '',
+        }
+      }
+
+      return baseReport
+    })
 
     const response = NextResponse.json({
       success: true,
       total: transformedReports.length,
-      reports: transformedReports
+      reports: transformedReports,
+      isAdmin: isAdmin, // Let frontend know if user is admin
+      currentUserId: user.id
     })
     
     // Add CORS headers

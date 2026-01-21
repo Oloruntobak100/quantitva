@@ -38,7 +38,8 @@ export async function GET() {
     // Check if user is admin
     const isAdmin = user.user_metadata?.role === 'admin' || 
                     user.app_metadata?.role === 'admin' ||
-                    user.email === 'admin@quantitva.com'
+                    user.email === 'admin@quantitva.com' ||
+                    user.email === 'pat2echo@gmail.com' // Super Admin
 
     // Fetch all schedules using admin client
     let query = supabaseAdmin

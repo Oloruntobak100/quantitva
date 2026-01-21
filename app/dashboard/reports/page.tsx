@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw, Search, Filter, X } from 'lucide-react'
+import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw, Search, Filter, X, User } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Report {
@@ -26,6 +26,11 @@ interface Report {
   isFirstRun?: boolean
   runAt?: string
   createdAt?: string
+  // Admin-only fields
+  userId?: string
+  userEmail?: string
+  userName?: string
+  userCompany?: string
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'title-asc' | 'title-desc' | 'category-asc'
@@ -33,12 +38,14 @@ type SortOption = 'date-desc' | 'date-asc' | 'title-asc' | 'title-desc' | 'categ
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   
   // Filter and sort state
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [geographyFilter, setGeographyFilter] = useState<string>('all')
+  const [userFilter, setUserFilter] = useState<string>('all') // Admin-only: filter by user
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [showFilters, setShowFilters] = useState(false)
 
@@ -55,6 +62,7 @@ export default function ReportsPage() {
       }
       const data = await response.json()
       setReports(data.reports || [])
+      setIsAdmin(data.isAdmin || false)
     } catch (error) {
       console.error('Error loading reports:', error)
       toast.error('Failed to load reports')
@@ -92,6 +100,13 @@ export default function ReportsPage() {
     return Array.from(geographies).sort()
   }, [reports])
 
+  // Admin-only: Get unique users
+  const uniqueUsers = useMemo(() => {
+    if (!isAdmin) return []
+    const users = new Set(reports.map(r => r.userName || 'Unknown').filter(Boolean))
+    return Array.from(users).sort()
+  }, [reports, isAdmin])
+
   // Filter and sort reports
   const filteredAndSortedReports = useMemo(() => {
     let filtered = [...reports]
@@ -120,6 +135,11 @@ export default function ReportsPage() {
     // Apply geography filter
     if (geographyFilter !== 'all') {
       filtered = filtered.filter(r => r.geography === geographyFilter)
+    }
+
+    // Apply user filter (admin only)
+    if (isAdmin && userFilter !== 'all') {
+      filtered = filtered.filter(r => r.userName === userFilter)
     }
 
     // Apply sorting (always runs, even with default filters)
@@ -154,13 +174,14 @@ export default function ReportsPage() {
     setCategoryFilter('all')
     setTypeFilter('all')
     setGeographyFilter('all')
+    setUserFilter('all')
     setSortBy('date-desc')
   }
 
   // Check if any filters are active
   const hasActiveFilters = searchQuery || categoryFilter !== 'all' || 
                           typeFilter !== 'all' || geographyFilter !== 'all' || 
-                          sortBy !== 'date-desc'
+                          userFilter !== 'all' || sortBy !== 'date-desc'
 
   // Calculate stats (use original reports, not filtered)
   const thisMonth = reports.filter(r => {
@@ -294,7 +315,7 @@ export default function ReportsPage() {
 
             {/* Filter Options (collapsible) */}
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
+              <div className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4 pt-4 border-t`}>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
                     Category
@@ -344,6 +365,26 @@ export default function ReportsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Admin-only: User Filter */}
+                {isAdmin && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      User
+                    </label>
+                    <Select value={userFilter} onValueChange={setUserFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All users" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Users</SelectItem>
+                        {uniqueUsers.map(user => (
+                          <SelectItem key={user} value={user}>{user}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -437,9 +478,29 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Sub-niche */}
-                    <p className="text-sm text-gray-600 ml-13">
+                    <p className="text-sm text-gray-600 ml-13 mb-2">
                       Focus: {report.subNiche}
                     </p>
+
+                    {/* Admin-only: User Information */}
+                    {isAdmin && report.userName && (
+                      <div className="ml-13 mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                            <span className="font-medium">Generated by:</span>
+                          </Badge>
+                          <span className="font-medium text-gray-900">{report.userName}</span>
+                          {report.userCompany && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-600">{report.userCompany}</span>
+                            </>
+                          )}
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-500 text-xs">{report.userEmail}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
