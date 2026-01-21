@@ -50,10 +50,6 @@ function SettingsPage() {
   const [activeTab, setActiveTab] = useState('users')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   
-  // Webhook state (read-only, hardcoded in production)
-  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([])
-  const [webhooksLoading, setWebhooksLoading] = useState(false)
-  
   // User management state
   const [users, setUsers] = useState<UserProfile[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
@@ -61,13 +57,6 @@ function SettingsPage() {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [formLoading, setFormLoading] = useState(false)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-
-  const [formData, setFormData] = useState({
-    name: '',
-    url: '',
-    type: 'on-demand' as WebhookType,
-    description: '',
-  })
 
   const [userFormData, setUserFormData] = useState({
     email: '',
@@ -88,26 +77,10 @@ function SettingsPage() {
     loadProfile()
   }, [])
 
-  // Load webhooks from Supabase on mount
+  // Load users on mount
   useEffect(() => {
-    loadWebhooks()
+    loadUsers()
   }, [])
-
-  // Load users or webhooks when tab changes
-  useEffect(() => {
-    if (activeTab === 'users') {
-      loadUsers()
-    } else if (activeTab === 'webhooks') {
-      loadWebhooks()
-    }
-  }, [activeTab])
-
-  async function loadWebhooks() {
-    setWebhooksLoading(true)
-    const data = await getWebhooks()
-    setWebhooks(data)
-    setWebhooksLoading(false)
-  }
 
   async function loadUsers() {
     setUsersLoading(true)
