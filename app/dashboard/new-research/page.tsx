@@ -168,7 +168,7 @@ export default function NewResearchPage() {
       console.log('✅ Authenticated user:', user.id, user.email)
       
       // Get active on-demand webhooks
-      const activeWebhooks = getActiveWebhooksByType('on-demand')
+      const activeWebhooks = await getActiveWebhooksByType('on-demand')
       
       console.log('Active on-demand webhooks:', activeWebhooks)
       
@@ -340,7 +340,7 @@ export default function NewResearchPage() {
       console.log('✅ Authenticated user:', user.id, user.email)
       
       // Get active recurring webhooks
-      const activeWebhooks = getActiveWebhooksByType('recurring')
+      const activeWebhooks = await getActiveWebhooksByType('recurring')
       
       console.log('Active recurring webhooks:', activeWebhooks)
       
