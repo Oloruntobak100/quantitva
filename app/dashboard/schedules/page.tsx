@@ -137,71 +137,73 @@ export default function SchedulesPage() {
   const totalExecutions = schedules.reduce((sum, s) => sum + (s.execution_count || 0), 0)
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Scheduled Research</h2>
-          <p className="text-gray-600 mt-1">
+      <div className="flex flex-col sm:flex-row items-start justify-between mb-6 md:mb-8 gap-4">
+        <div className="min-w-0">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Scheduled Research</h2>
+          <p className="text-sm md:text-base text-gray-600 mt-1">
             Manage your recurring market research schedules
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="icon"
             onClick={loadSchedules}
             disabled={isLoading}
+            className="min-h-[44px] min-w-[44px] flex-shrink-0"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
-          <Link href="/dashboard/new-research">
-            <Button className="gap-2">
+          <Link href="/dashboard/new-research" className="flex-1 sm:flex-initial">
+            <Button className="gap-2 w-full min-h-[44px]">
               <Plus className="w-4 h-4" />
-              New Schedule
+              <span className="hidden sm:inline">New Schedule</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <Card className="border-2">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 sm:pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                 Total Schedules
               </CardTitle>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Repeat className="w-5 h-5 text-blue-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Repeat className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-400 animate-pulse">...</div>
             ) : (
-              <div className="text-4xl font-bold text-gray-900">{schedules.length}</div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-900">{schedules.length}</div>
             )}
           </CardContent>
         </Card>
         
         <Card className="border-2 border-green-200 bg-green-50/30">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 sm:pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                 Active Schedules
               </CardTitle>
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Play className="w-5 h-5 text-green-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-400 animate-pulse">...</div>
             ) : (
-              <div className="text-4xl font-bold text-green-600">
+              <div className="text-3xl sm:text-4xl font-bold text-green-600">
                 {activeSchedules.length}
               </div>
             )}
@@ -209,21 +211,21 @@ export default function SchedulesPage() {
         </Card>
         
         <Card className="border-2">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 sm:pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                 Paused Schedules
               </CardTitle>
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Pause className="w-5 h-5 text-gray-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Pause className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-400 animate-pulse">...</div>
             ) : (
-              <div className="text-4xl font-bold text-gray-500">
+              <div className="text-3xl sm:text-4xl font-bold text-gray-500">
                 {inactiveSchedules.length}
               </div>
             )}
@@ -231,21 +233,21 @@ export default function SchedulesPage() {
         </Card>
 
         <Card className="border-2 border-purple-200 bg-purple-50/30">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 sm:pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                 Total Executions
               </CardTitle>
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <BarChart className="w-5 h-5 text-purple-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-2xl font-bold text-gray-400 animate-pulse">...</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-400 animate-pulse">...</div>
             ) : (
-              <div className="text-4xl font-bold text-purple-600">
+              <div className="text-3xl sm:text-4xl font-bold text-purple-600">
                 {totalExecutions}
               </div>
             )}
@@ -276,12 +278,12 @@ export default function SchedulesPage() {
 
       {/* Active Schedules */}
       {activeSchedules.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Play className="w-5 h-5 text-green-600" />
-            Active Schedules ({activeSchedules.length})
+        <div className="mb-6 sm:mb-8">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Play className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+            <span>Active Schedules ({activeSchedules.length})</span>
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {activeSchedules.map((schedule) => (
               <ScheduleCard
                 key={schedule.id}
@@ -297,11 +299,11 @@ export default function SchedulesPage() {
       {/* Inactive Schedules */}
       {inactiveSchedules.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Pause className="w-5 h-5 text-gray-600" />
-            Paused Schedules ({inactiveSchedules.length})
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Pause className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+            <span>Paused Schedules ({inactiveSchedules.length})</span>
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {inactiveSchedules.map((schedule) => (
               <ScheduleCard
                 key={schedule.id}
@@ -414,38 +416,38 @@ function ScheduleCard({
         : 'border-gray-200 bg-gray-50/50'
     }`}>
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <CardTitle className="text-xl truncate">{schedule.title}</CardTitle>
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0 w-full lg:w-auto">
+            <div className="flex items-start sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-2 flex-wrap">
+              <CardTitle className="text-base sm:text-lg md:text-xl truncate">{schedule.title}</CardTitle>
               <Badge 
                 variant={schedule.active ? 'default' : 'secondary'}
-                className={schedule.active ? 'bg-green-600' : ''}
+                className={`${schedule.active ? 'bg-green-600' : ''} text-xs sm:text-sm flex-shrink-0`}
               >
                 {schedule.active ? 'Active' : 'Paused'}
               </Badge>
-              <Badge variant="outline" className="bg-white capitalize">
+              <Badge variant="outline" className="bg-white capitalize text-xs sm:text-sm flex-shrink-0">
                 {schedule.frequency}
               </Badge>
               {schedule.execution_count > 0 && (
-                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs sm:text-sm flex-shrink-0">
                   <TrendingUp className="w-3 h-3 mr-1" />
                   {schedule.execution_count} runs
                 </Badge>
               )}
             </div>
-            <CardDescription className="text-sm flex items-center gap-2">
-              <span>{schedule.industry}</span>
+            <CardDescription className="text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="truncate">{schedule.industry}</span>
               <span className="text-gray-400">•</span>
-              <span>{schedule.sub_niche}</span>
+              <span className="truncate">{schedule.sub_niche}</span>
             </CardDescription>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 w-full lg:w-auto flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={onPause}
-              className={`gap-2 ${
+              className={`gap-1.5 sm:gap-2 min-h-[44px] flex-1 lg:flex-initial text-xs sm:text-sm ${
                 schedule.active 
                   ? 'hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300' 
                   : 'hover:bg-green-50 hover:text-green-700 hover:border-green-300'
@@ -453,13 +455,13 @@ function ScheduleCard({
             >
               {schedule.active ? (
                 <>
-                  <Pause className="w-4 h-4" />
-                  Pause
+                  <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span>Pause</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4" />
-                  Resume
+                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span>Resume</span>
                 </>
               )}
             </Button>
@@ -467,43 +469,44 @@ function ScheduleCard({
               variant="outline"
               size="sm"
               onClick={onDelete}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300 min-h-[44px] flex-1 lg:flex-initial text-xs sm:text-sm"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="lg:hidden">Delete</span>
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="w-4 h-4 text-gray-400" />
-              <span className="capitalize">{schedule.geography}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <div className="space-y-2 md:space-y-3">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+              <span className="capitalize truncate">{schedule.geography}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Mail className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
               <span className="truncate">{schedule.email}</span>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span>Created {new Date(schedule.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <div className="space-y-2 md:space-y-3">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+              <span className="truncate">Created {new Date(schedule.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
             {schedule.last_run && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span>Last run {new Date(schedule.last_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                <span className="truncate">Last run {new Date(schedule.last_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               </div>
             )}
           </div>
-          <div className="space-y-3">
-            <div className="flex items-start gap-2 text-sm">
-              <Clock className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div>
+          <div className="space-y-2 md:space-y-3">
+            <div className="flex items-start gap-2 text-xs sm:text-sm">
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
                 <div className="font-medium text-gray-900">Next Run</div>
-                <div className="text-gray-600">
+                <div className="text-gray-600 truncate">
                   {new Date(schedule.next_run).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -519,8 +522,8 @@ function ScheduleCard({
           </div>
         </div>
         {schedule.notes && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+            <p className="text-xs sm:text-sm text-gray-600">
               <span className="font-medium text-gray-700">Notes:</span> {schedule.notes}
             </p>
           </div>

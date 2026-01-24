@@ -228,73 +228,73 @@ function SettingsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
-          <p className="text-gray-600">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Settings</h2>
+          <p className="text-sm md:text-base text-gray-600">
             Manage webhooks, users, and application configuration
           </p>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="w-4 h-4" />
-              User Management
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="w-full grid grid-cols-1 h-auto">
+            <TabsTrigger value="users" className="gap-2 min-h-[44px] text-sm sm:text-base">
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span>User Management</span>
             </TabsTrigger>
           </TabsList>
 
           {/* User Management Tab */}
           <TabsContent value="users">
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                   <Card>
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-2 sm:pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium text-gray-600">
+                        <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                           Total Users
                         </CardTitle>
-                        <Users className="w-5 h-5 text-blue-600" />
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-gray-900">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                         {users.length}
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-2 sm:pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium text-gray-600">
+                        <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                           Administrators
                         </CardTitle>
-                        <ShieldCheck className="w-5 h-5 text-purple-600" />
+                        <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-gray-900">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                         {users.filter(u => u.role === 'admin').length}
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-2 sm:pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium text-gray-600">
+                        <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                           Regular Users
                         </CardTitle>
-                        <User className="w-5 h-5 text-green-600" />
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-gray-900">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                         {users.filter(u => u.role === 'user').length}
                       </div>
                     </CardContent>
@@ -304,16 +304,16 @@ function SettingsPage() {
                 {/* Users Table */}
                 <Card className="border-2">
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>All Users</CardTitle>
-                        <CardDescription>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="min-w-0">
+                        <CardTitle className="text-base sm:text-lg md:text-xl">All Users</CardTitle>
+                        <CardDescription className="text-xs sm:text-sm">
                           View and manage all user accounts
                         </CardDescription>
                       </div>
-                      <Button onClick={() => handleOpenUserDialog()} className="gap-2">
-                        <Plus className="w-4 h-4" />
-                        Add User
+                      <Button onClick={() => handleOpenUserDialog()} className="gap-2 w-full sm:w-auto min-h-[44px] text-sm sm:text-base">
+                        <Plus className="w-4 h-4 flex-shrink-0" />
+                        <span>Add User</span>
                       </Button>
                     </div>
                   </CardHeader>
@@ -323,22 +323,22 @@ function SettingsPage() {
                         <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
                       </div>
                     ) : (
-                      <div className="rounded-lg border">
+                      <div className="rounded-lg border overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>User</TableHead>
-                              <TableHead>Company</TableHead>
-                              <TableHead>Role</TableHead>
-                              <TableHead>Joined</TableHead>
-                              <TableHead>Last Login</TableHead>
-                              <TableHead className="text-right">Actions</TableHead>
+                              <TableHead className="min-w-[180px] sm:min-w-[200px]">User</TableHead>
+                              <TableHead className="min-w-[120px] sm:min-w-[150px] hidden md:table-cell">Company</TableHead>
+                              <TableHead className="min-w-[80px] sm:min-w-[100px]">Role</TableHead>
+                              <TableHead className="min-w-[100px] sm:min-w-[120px] hidden lg:table-cell">Joined</TableHead>
+                              <TableHead className="min-w-[100px] sm:min-w-[120px] hidden xl:table-cell">Last Login</TableHead>
+                              <TableHead className="text-right min-w-[100px] sm:min-w-[120px]">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {users.length === 0 ? (
                               <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                <TableCell colSpan={6} className="text-center py-8 text-gray-500 text-sm">
                                   No users found
                                 </TableCell>
                               </TableRow>
@@ -347,61 +347,62 @@ function SettingsPage() {
                                 <TableRow key={user.id}>
                                   <TableCell>
                                     <div>
-                                      <div className="font-medium text-gray-900 flex items-center gap-2">
-                                        {user.full_name || 'No name'}
+                                      <div className="font-medium text-gray-900 flex items-center gap-1.5 sm:gap-2 flex-wrap text-sm sm:text-base">
+                                        <span className="truncate">{user.full_name || 'No name'}</span>
                                         {user.id === currentUser?.id && (
-                                          <Badge variant="outline" className="text-xs">You</Badge>
+                                          <Badge variant="outline" className="text-xs flex-shrink-0">You</Badge>
                                         )}
                                       </div>
-                                      <div className="text-sm text-gray-500">{user.email}</div>
+                                      <div className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</div>
                                     </div>
                                   </TableCell>
-                                  <TableCell>
-                                    <span className="text-sm text-gray-600">
+                                  <TableCell className="hidden md:table-cell">
+                                    <span className="text-xs sm:text-sm text-gray-600 truncate block">
                                       {user.company_name || '-'}
                                     </span>
                                   </TableCell>
                                   <TableCell>
                                     <Badge
                                       variant={user.role === 'admin' ? 'default' : 'secondary'}
-                                      className={user.role === 'admin' 
+                                      className={`${user.role === 'admin' 
                                         ? 'bg-purple-100 text-purple-700 border-purple-200' 
-                                        : ''}
+                                        : ''} text-xs`}
                                     >
                                       {user.role === 'admin' && <ShieldCheck className="w-3 h-3 mr-1" />}
                                       {user.role === 'user' && <User className="w-3 h-3 mr-1" />}
-                                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                      <span className="hidden sm:inline">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
                                     </Badge>
                                   </TableCell>
-                                  <TableCell>
-                                    <span className="text-sm text-gray-600">
+                                  <TableCell className="hidden lg:table-cell">
+                                    <span className="text-xs sm:text-sm text-gray-600">
                                       {new Date(user.created_at).toLocaleDateString()}
                                     </span>
                                   </TableCell>
-                                  <TableCell>
-                                    <span className="text-sm text-gray-600">
+                                  <TableCell className="hidden xl:table-cell">
+                                    <span className="text-xs sm:text-sm text-gray-600">
                                       {user.last_login 
                                         ? new Date(user.last_login).toLocaleDateString()
                                         : 'Never'}
                                     </span>
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                    <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                                       <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handleOpenUserDialog(user)}
+                                        className="min-h-[36px] min-w-[36px] text-xs sm:text-sm"
                                       >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                       </Button>
                                       {user.id !== currentUser?.id && (
                                         <Button
                                           variant="outline"
                                           size="sm"
                                           onClick={() => setDeleteConfirmId(user.id)}
-                                          className="text-red-600 hover:text-red-700"
+                                          className="text-red-600 hover:text-red-700 min-h-[36px] min-w-[36px] text-xs sm:text-sm"
                                         >
-                                          <Trash2 className="w-4 h-4" />
+                                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                         </Button>
                                       )}
                                     </div>
@@ -421,20 +422,20 @@ function SettingsPage() {
 
         {/* Add/Edit User Dialog */}
         <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto mx-4">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-base sm:text-lg">
                 {editingUser ? 'Edit User' : 'Add New User'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm">
                 {editingUser 
                   ? 'Update user information and role'
                   : 'Create a new user account'}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-3 sm:space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="user-email">Email Address *</Label>
+                <Label htmlFor="user-email" className="text-sm sm:text-base">Email Address *</Label>
                 <Input
                   id="user-email"
                   type="email"
@@ -442,12 +443,13 @@ function SettingsPage() {
                   value={userFormData.email}
                   onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
                   disabled={formLoading}
+                  className="text-sm sm:text-base h-10 sm:h-11"
                 />
               </div>
 
               {!editingUser && (
                 <div className="space-y-2">
-                  <Label htmlFor="user-password">Password *</Label>
+                  <Label htmlFor="user-password" className="text-sm sm:text-base">Password *</Label>
                   <Input
                     id="user-password"
                     type="password"
@@ -455,12 +457,13 @@ function SettingsPage() {
                     value={userFormData.password}
                     onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
                     disabled={formLoading}
+                    className="text-sm sm:text-base h-10 sm:h-11"
                   />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="user-full_name">Full Name</Label>
+                <Label htmlFor="user-full_name" className="text-sm sm:text-base">Full Name</Label>
                 <Input
                   id="user-full_name"
                   type="text"
@@ -468,11 +471,12 @@ function SettingsPage() {
                   value={userFormData.full_name}
                   onChange={(e) => setUserFormData({ ...userFormData, full_name: e.target.value })}
                   disabled={formLoading}
+                  className="text-sm sm:text-base h-10 sm:h-11"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="user-company_name">Company Name (Optional)</Label>
+                <Label htmlFor="user-company_name" className="text-sm sm:text-base">Company Name (Optional)</Label>
                 <Input
                   id="user-company_name"
                   type="text"
@@ -480,30 +484,31 @@ function SettingsPage() {
                   value={userFormData.company_name}
                   onChange={(e) => setUserFormData({ ...userFormData, company_name: e.target.value })}
                   disabled={formLoading}
+                  className="text-sm sm:text-base h-10 sm:h-11"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="user-role">Role *</Label>
+                <Label htmlFor="user-role" className="text-sm sm:text-base">Role *</Label>
                 <Select
                   value={userFormData.role}
                   onValueChange={(value: 'admin' | 'user') => setUserFormData({ ...userFormData, role: value })}
                   disabled={formLoading || (editingUser?.id === currentUser?.id)}
                 >
-                  <SelectTrigger id="user-role">
+                  <SelectTrigger id="user-role" className="text-sm sm:text-base h-10 sm:h-11">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        <span>User</span>
+                        <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-sm sm:text-base">User</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="admin">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Administrator</span>
+                        <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-sm sm:text-base">Administrator</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -513,15 +518,15 @@ function SettingsPage() {
                 )}
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseUserDialog} disabled={formLoading}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={handleCloseUserDialog} disabled={formLoading} className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base">
                 Cancel
               </Button>
-              <Button onClick={handleSaveUser} disabled={formLoading}>
+              <Button onClick={handleSaveUser} disabled={formLoading} className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base">
                 {formLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    <span>Saving...</span>
                   </>
                 ) : (
                   editingUser ? 'Save Changes' : 'Create User'
@@ -533,29 +538,30 @@ function SettingsPage() {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
-          <DialogContent>
+          <DialogContent className="mx-4">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="w-5 h-5" />
-                Delete User
+              <DialogTitle className="flex items-center gap-2 text-red-600 text-base sm:text-lg">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>Delete User</span>
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm">
                 Are you sure you want to delete this user? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteConfirmId(null)} disabled={formLoading}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setDeleteConfirmId(null)} disabled={formLoading} className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base">
                 Cancel
               </Button>
               <Button 
                 variant="destructive" 
                 onClick={() => deleteConfirmId && handleDeleteUser(deleteConfirmId)}
                 disabled={formLoading}
+                className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
               >
                 {formLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting...
+                    <span>Deleting...</span>
                   </>
                 ) : (
                   'Delete User'

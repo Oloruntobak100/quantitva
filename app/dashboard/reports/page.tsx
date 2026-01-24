@@ -205,13 +205,13 @@ export default function ReportsPage() {
     )
   }
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Research Reports</h2>
-            <p className="text-gray-600">
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Research Reports</h2>
+            <p className="text-sm md:text-base text-gray-600">
               View and analyze your generated market intelligence reports
             </p>
           </div>
@@ -220,7 +220,7 @@ export default function ReportsPage() {
             size="sm"
             onClick={loadReports}
             disabled={loading}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto flex-shrink-0 min-h-[44px]"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -228,44 +228,44 @@ export default function ReportsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Reports</p>
-                  <p className="text-3xl font-bold text-gray-900">{reports.length}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Reports</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{reports.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-blue-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">This Month</p>
-                  <p className="text-3xl font-bold text-gray-900">{thisMonth}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">This Month</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{thisMonth}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Latest Report</p>
-                  <p className="text-lg font-bold text-gray-900">{latestReport.split(',')[0] || 'None'}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Latest Report</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 truncate">{latestReport.split(',')[0] || 'None'}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-purple-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -273,27 +273,27 @@ export default function ReportsPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="pt-4 sm:pt-6">
             {/* Search Bar and Filter Toggle */}
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Search reports by title, category, or geography..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-sm sm:text-base h-11"
                 />
               </div>
               <div className="flex gap-2">
                 <Button
                   variant={showFilters ? "default" : "outline"}
                   onClick={() => setShowFilters(!showFilters)}
-                  className="gap-2 whitespace-nowrap"
+                  className="gap-2 whitespace-nowrap flex-1 sm:flex-initial min-h-[44px]"
                 >
-                  <Filter className="w-4 h-4" />
-                  Filters
+                  <Filter className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Filters</span>
                   {hasActiveFilters && !showFilters && (
                     <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
                       Active
@@ -304,10 +304,10 @@ export default function ReportsPage() {
                   <Button
                     variant="ghost"
                     onClick={clearFilters}
-                    className="gap-2 whitespace-nowrap"
+                    className="gap-2 whitespace-nowrap min-h-[44px]"
                   >
-                    <X className="w-4 h-4" />
-                    Clear
+                    <X className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm sm:text-base hidden sm:inline">Clear</span>
                   </Button>
                 )}
               </div>
@@ -315,13 +315,13 @@ export default function ReportsPage() {
 
             {/* Filter Options (collapsible) */}
             {showFilters && (
-              <div className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4 pt-4 border-t`}>
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-3 sm:gap-4 pt-3 sm:pt-4 border-t`}>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
                     Category
                   </label>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
                     <SelectContent>
@@ -334,11 +334,11 @@ export default function ReportsPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
                     Type
                   </label>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>
                     <SelectContent>
@@ -350,11 +350,11 @@ export default function ReportsPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
                     Geography
                   </label>
                   <Select value={geographyFilter} onValueChange={setGeographyFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                       <SelectValue placeholder="All geographies" />
                     </SelectTrigger>
                     <SelectContent>
@@ -369,11 +369,11 @@ export default function ReportsPage() {
                 {/* Admin-only: User Filter */}
                 {isAdmin && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
                       User
                     </label>
                     <Select value={userFilter} onValueChange={setUserFilter}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                         <SelectValue placeholder="All users" />
                       </SelectTrigger>
                       <SelectContent>
@@ -387,11 +387,11 @@ export default function ReportsPage() {
                 )}
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
                     Sort By
                   </label>
                   <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -407,7 +407,7 @@ export default function ReportsPage() {
             )}
 
             {/* Results count */}
-            <div className="mt-4 text-sm text-gray-600">
+            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600">
               Showing {filteredAndSortedReports.length} of {reports.length} reports
               {hasActiveFilters && (
                 <span className="ml-2 text-blue-600 font-medium">
@@ -419,7 +419,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Reports List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredAndSortedReports.map((report, index) => {
             // Check if this is the most recent report (within last 24 hours)
             const isNew = index === 0 && (() => {
@@ -439,24 +439,24 @@ export default function ReportsPage() {
                   </div>
                 )}
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0 w-full lg:w-auto">
                       {/* Title and Type */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                          <FileText className="w-5 h-5 text-blue-600" />
+                      <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
+                          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
                             {report.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="secondary" className="font-normal">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <Badge variant="secondary" className="font-normal text-xs">
                               {report.category}
                             </Badge>
                             <Badge 
                               variant={report.type === 'Recurring' ? 'default' : 'outline'}
-                              className="font-normal"
+                              className="font-normal text-xs"
                             >
                               {report.type}
                             </Badge>
@@ -466,58 +466,59 @@ export default function ReportsPage() {
             
 
                     {/* Details */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3 ml-13">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        <span>{report.dateGenerated}</span>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 ml-10 sm:ml-13">
+                      <div className="flex items-center gap-1 sm:gap-1.5">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{report.dateGenerated}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-4 h-4" />
-                        <span>{report.geography}</span>
+                      <div className="flex items-center gap-1 sm:gap-1.5">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{report.geography}</span>
                       </div>
                     </div>
 
                     {/* Sub-niche */}
-                    <p className="text-sm text-gray-600 ml-13 mb-2">
+                    <p className="text-xs sm:text-sm text-gray-600 ml-10 sm:ml-13 mb-1 sm:mb-2">
                       Focus: {report.subNiche}
                     </p>
 
                     {/* Admin-only: User Information */}
                     {isAdmin && report.userName && (
-                      <div className="ml-13 mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      <div className="ml-10 sm:ml-13 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
                             <span className="font-medium">Generated by:</span>
                           </Badge>
-                          <span className="font-medium text-gray-900">{report.userName}</span>
+                          <span className="font-medium text-gray-900 truncate">{report.userName}</span>
                           {report.userCompany && (
                             <>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-gray-600">{report.userCompany}</span>
+                              <span className="text-gray-400 hidden sm:inline">•</span>
+                              <span className="text-gray-600 truncate">{report.userCompany}</span>
                             </>
                           )}
-                          <span className="text-gray-400">•</span>
-                          <span className="text-gray-500 text-xs">{report.userEmail}</span>
+                          <span className="text-gray-400 hidden sm:inline">•</span>
+                          <span className="text-gray-500 text-xs truncate">{report.userEmail}</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex-shrink-0 flex gap-2">
-                    <Link href={`/dashboard/reports/${report.id}`}>
-                      <Button variant="outline" className="gap-2">
-                        View Report
+                  <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+                    <Link href={`/dashboard/reports/${report.id}`} className="flex-1 sm:flex-initial">
+                      <Button variant="outline" className="gap-2 w-full min-h-[44px]">
+                        <span className="text-sm sm:text-base">View Report</span>
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </Link>
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] min-w-[44px] w-full sm:w-auto"
                       onClick={() => handleDelete(report.id, report.title)}
                     >
                       <Trash2 className="w-4 h-4" />
+                      <span className="sm:hidden ml-2">Delete</span>
                     </Button>
                   </div>
                 </div>

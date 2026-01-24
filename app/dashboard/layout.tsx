@@ -14,8 +14,16 @@ import {
   Calendar, 
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Menu,
+  X
 } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { useAuth } from '@/lib/auth/auth-context'
 import { getCurrentUserProfile, UserProfile } from '@/lib/auth/user-service'
 import {
@@ -53,6 +61,7 @@ export default function DashboardLayout({
   const { user, signOut, updateProfile } = useAuth()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileForm, setProfileForm] = useState({
     full_name: '',
@@ -109,6 +118,74 @@ export default function DashboardLayout({
     !item.adminOnly || userProfile?.role === 'admin'
   )
 
+  // Sidebar content component (reused for desktop and mobile)
+  const SidebarContent = () => (
+    <>
+      {/* Logo */}
+      <div className="h-16 flex items-center px-6 border-b border-gray-200">
+        <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+          <img 
+            src="/quantiva.png" 
+            alt="Quantiva" 
+            className="h-8 w-8 object-contain"
+          />
+          <span className="text-lg font-bold text-gray-900">Quantiva</span>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {navigation.map((item) => {
+          const isActive = pathname === item.href
+          const Icon = item.icon
+          
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px]
+                ${isActive 
+                  ? 'bg-blue-50 text-blue-700' 
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }
+              `}
+            >
+              <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
+              <span className="truncate">{item.name}</span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Sidebar Footer */}
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={() => {
+            setIsProfileDialogOpen(true)
+            setIsMobileMenuOpen(false)
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]"
+        >
+          <Avatar className="w-8 h-8 flex-shrink-0">
+            <AvatarFallback className="bg-blue-600 text-white text-sm">
+              {getUserInitials()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {getDisplayName()}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user?.email || ''}
+            </p>
+          </div>
+        </button>
+      </div>
+    </>
+  )
+
   // Handle profile update
   const handleSaveProfile = async () => {
     setProfileLoading(true)
@@ -134,107 +211,69 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <img 
-              src="/quantiva.png" 
-              alt="Quantiva" 
-              className="h-8 w-8 object-contain"
-            />
-            <span className="text-lg font-bold text-gray-900">Quantiva</span>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            const Icon = item.icon
-            
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${isActive 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }
-                `}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
-                {item.name}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => setIsProfileDialogOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-blue-600 text-white text-sm">
-                {getUserInitials()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {getDisplayName()}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {user?.email || ''}
-              </p>
-            </div>
-          </button>
-        </div>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden md:flex md:w-64 lg:w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0">
+        <SidebarContent />
       </aside>
 
+      {/* Mobile Sidebar - Sheet/Drawer */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="w-[280px] max-w-[85vw] p-0 flex flex-col">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+        <header className="h-14 sm:h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            {/* Hamburger Menu Button - Only visible on mobile */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+            </button>
+            
+            {/* Page Title */}
+            <h1 className="text-base sm:text-lg md:text-2xl font-bold text-gray-900 truncate">
+              {getPageTitle()}
+            </h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             {/* User Avatar with Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
-                  <Avatar className="w-9 h-9">
-                    <AvatarFallback className="bg-blue-600 text-white">
+                <button className="flex items-center gap-1 sm:gap-2 md:gap-3 hover:bg-gray-100 px-1.5 sm:px-2 md:px-3 py-2 rounded-lg transition-colors min-h-[44px]">
+                  <Avatar className="w-8 h-8 md:w-9 md:h-9 flex-shrink-0">
+                    <AvatarFallback className="bg-blue-600 text-white text-xs sm:text-sm">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
+                  <div className="hidden lg:block text-left">
+                    <p className="text-sm font-medium text-gray-900 truncate max-w-[150px]">{getDisplayName()}</p>
                     <p className="text-xs text-gray-500 capitalize">{userProfile?.role || 'User'}</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-400 hidden md:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{getDisplayName()}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-sm font-medium truncate">{getDisplayName()}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setIsProfileDialogOpen(true)}>
-                  <Settings className="w-4 h-4 mr-2" />
+                  <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
                   My Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -243,7 +282,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
           {children}
         </main>
       </div>
