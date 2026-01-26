@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw, Search, Filter, X, User } from 'lucide-react'
+import { FileText, Calendar, MapPin, ChevronRight, TrendingUp, Clock, Trash2, RefreshCw, Search, Filter, X, User, Target } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Report {
@@ -438,91 +438,84 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 )}
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0 w-full lg:w-auto">
-                      {/* Title and Type */}
-                      <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
-                          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
-                            {report.title}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                            <Badge variant="secondary" className="font-normal text-xs">
-                              {report.category}
-                            </Badge>
-                            <Badge 
-                              variant={report.type === 'Recurring' ? 'default' : 'outline'}
-                              className="font-normal text-xs"
-                            >
-                              {report.type}
-                            </Badge>
-                          </div>
-                        </div>
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col gap-4">
+                    {/* Title and Type Section */}
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-blue-600" />
                       </div>
-            
-
-                    {/* Details */}
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 ml-10 sm:ml-13">
-                      <div className="flex items-center gap-1 sm:gap-1.5">
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                        <span className="truncate">{report.dateGenerated}</span>
-                      </div>
-                      <div className="flex items-center gap-1 sm:gap-1.5">
-                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                        <span className="truncate">{report.geography}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 break-words">
+                          {report.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="font-normal text-xs">
+                            {report.category}
+                          </Badge>
+                          <Badge 
+                            variant={report.type === 'Recurring' ? 'default' : 'outline'}
+                            className="font-normal text-xs"
+                          >
+                            {report.type}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Sub-niche */}
-                    <p className="text-xs sm:text-sm text-gray-600 ml-10 sm:ml-13 mb-1 sm:mb-2">
-                      Focus: {report.subNiche}
-                    </p>
+                    {/* Details Section */}
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <span>{report.dateGenerated}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        <span className="break-words">{report.geography}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Target className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span className="break-words">Focus: {report.subNiche}</span>
+                      </div>
+                    </div>
 
                     {/* Admin-only: User Information */}
                     {isAdmin && report.userName && (
-                      <div className="ml-10 sm:ml-13 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
-                            <span className="font-medium">Generated by:</span>
+                      <div className="pt-3 border-t border-gray-200">
+                        <div className="flex flex-col gap-2 text-xs sm:text-sm">
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs w-fit">
+                            Generated by
                           </Badge>
-                          <span className="font-medium text-gray-900 truncate">{report.userName}</span>
-                          {report.userCompany && (
-                            <>
-                              <span className="text-gray-400 hidden sm:inline">•</span>
-                              <span className="text-gray-600 truncate">{report.userCompany}</span>
-                            </>
-                          )}
-                          <span className="text-gray-400 hidden sm:inline">•</span>
-                          <span className="text-gray-500 text-xs truncate">{report.userEmail}</span>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium text-gray-900 break-words">{report.userName}</span>
+                            {report.userCompany && (
+                              <span className="text-gray-600 break-words">{report.userCompany}</span>
+                            )}
+                            <span className="text-gray-500 text-xs break-all">{report.userEmail}</span>
+                          </div>
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-                    <Link href={`/dashboard/reports/${report.id}`} className="flex-1 sm:flex-initial">
-                      <Button variant="outline" className="gap-2 w-full min-h-[44px]">
-                        <span className="text-sm sm:text-base">View Report</span>
-                        <ChevronRight className="w-4 h-4" />
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100">
+                      <Link href={`/dashboard/reports/${report.id}`} className="flex-1">
+                        <Button variant="outline" className="gap-2 w-full min-h-[48px]">
+                          <span className="text-sm sm:text-base">View Report</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[48px] w-full sm:w-auto gap-2"
+                        onClick={() => handleDelete(report.id, report.title)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Delete</span>
                       </Button>
-                    </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] min-w-[44px] w-full sm:w-auto"
-                      onClick={() => handleDelete(report.id, report.title)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="sm:hidden ml-2">Delete</span>
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
+                </CardContent>
             </Card>
             )
           })}

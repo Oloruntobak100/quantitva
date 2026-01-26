@@ -248,6 +248,16 @@ export default function NewResearchPage() {
           const webReport = reportData.webReport || ''
           const emailReport = reportData.emailReport || webReport
           
+          // Validate that we have report content
+          if (!webReport || webReport.trim() === '') {
+            console.error('❌ No report content received from webhook')
+            toast.error('Report generation failed', {
+              description: 'No content was generated. Please try again.',
+            })
+            setIsSubmitting(false)
+            return
+          }
+          
           // Save to database via API
           try {
             const saveResponse = await fetch('/api/reports/on-demand', {
@@ -274,17 +284,39 @@ export default function NewResearchPage() {
               const saveResult = await saveResponse.json()
               savedReportId = saveResult.execution_id
               console.log('✅ Report saved to database with ID:', savedReportId)
+              
+              // Wait a bit to ensure database transaction completes
+              await new Promise(resolve => setTimeout(resolve, 1000))
             } else {
-              console.error('❌ Failed to save report to database:', await saveResponse.text())
+              const errorText = await saveResponse.text()
+              console.error('❌ Failed to save report to database:', errorText)
+              toast.error('Failed to save report', {
+                description: 'The report was generated but could not be saved. Please contact support.',
+              })
+              setIsSubmitting(false)
+              return
             }
           } catch (saveError) {
             console.error('❌ Error saving report to database:', saveError)
+            toast.error('Failed to save report', {
+              description: 'An unexpected error occurred. Please try again.',
+            })
+            setIsSubmitting(false)
+            return
           }
+        } else {
+          console.error('❌ No webhook response data received')
+          toast.error('Report generation failed', {
+            description: 'No response received from the report generator.',
+          })
+          setIsSubmitting(false)
+          return
         }
 
-        toast.success('On-Demand Research submitted successfully!', {
-          description: 'The report has been generated and saved',
-          duration: 5000,
+        // Show success message
+        toast.success('On-Demand Research completed!', {
+          description: 'Your report has been generated and saved. Redirecting...',
+          duration: 3000,
         })
         
         // Reset form
@@ -296,14 +328,17 @@ export default function NewResearchPage() {
           notes: '',
         })
 
-        // Navigate to the saved report
+        // Navigate to the saved report with proper delay
         setTimeout(() => {
           if (savedReportId) {
+            console.log('🔄 Navigating to report:', savedReportId)
             router.push(`/dashboard/reports/${savedReportId}`)
+            router.refresh() // Refresh to ensure data is loaded
           } else {
             router.push('/dashboard/reports')
+            router.refresh()
           }
-        }, 1500)
+        }, 2000)
       } else {
         throw new Error('All webhooks failed')
       }
@@ -428,8 +463,9 @@ export default function NewResearchPage() {
       
       if (successCount > 0) {
         let scheduleId: string | null = null
+        let savedReportId: string | null = null
         
-        // Create schedule for recurring reports (n8n will generate reports periodically)
+        // Create schedule for recurring reports
         const schedule = createScheduleFromForm(recurringForm)
         saveSchedule(schedule)
         scheduleId = schedule.id
@@ -438,8 +474,53 @@ export default function NewResearchPage() {
         console.log('✅ Schedule created with ID:', schedule.id)
         console.log('📆 Next run:', schedule.nextRun)
 
+        // Save the initial report to database if webhook returned data
+        if (webhookResponseData) {
+          console.log('💾 Saving initial recurring report to database...')
+          
+          try {
+            const reportData = Array.isArray(webhookResponseData) ? webhookResponseData[0] : webhookResponseData
+            const webReport = reportData.webReport || ''
+            const emailReport = reportData.emailReport || webReport
+            
+            if (webReport && webReport.trim() !== '') {
+              const saveResponse = await fetch('/api/reports/on-demand', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  user_id: user.id,
+                  industry: recurringForm.marketCategory,
+                  sub_niche: recurringForm.subNiche,
+                  geography: recurringForm.geography || 'Global',
+                  email: recurringForm.email,
+                  final_report: webReport,
+                  email_report: emailReport,
+                  notes: recurringForm.notes,
+                }),
+              })
+              
+              if (saveResponse.ok) {
+                const saveResult = await saveResponse.json()
+                savedReportId = saveResult.execution_id
+                console.log('✅ Initial recurring report saved with ID:', savedReportId)
+                
+                // Wait for database transaction
+                await new Promise(resolve => setTimeout(resolve, 1000))
+              } else {
+                console.error('❌ Failed to save initial report:', await saveResponse.text())
+              }
+            }
+          } catch (saveError) {
+            console.error('❌ Error saving initial recurring report:', saveError)
+          }
+        }
+
         toast.success('Recurring Research scheduled successfully!', {
-          description: 'Request logged successfully. Your reports will be generated automatically according to your frequency and available in the Reports section.',
+          description: savedReportId 
+            ? 'Initial report generated! Future reports will be created automatically.'
+            : 'Schedule created. Reports will be generated automatically according to your frequency.',
           duration: 6000,
         })
         
@@ -453,10 +534,17 @@ export default function NewResearchPage() {
           notes: '',
         })
 
-        // Navigate to schedules page
+        // Navigate based on whether we have a report
         setTimeout(() => {
-          router.push('/dashboard/schedules')
-        }, 1500)
+          if (savedReportId) {
+            console.log('🔄 Navigating to initial report:', savedReportId)
+            router.push(`/dashboard/reports/${savedReportId}`)
+            router.refresh() // Refresh to ensure data is loaded
+          } else {
+            router.push('/dashboard/schedules')
+            router.refresh()
+          }
+        }, 2000)
       } else {
         throw new Error('All webhooks failed')
       }

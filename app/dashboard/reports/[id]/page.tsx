@@ -141,61 +141,70 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
         <Link href="/dashboard/reports">
-          <Button variant="ghost" className="gap-2 mb-6">
+          <Button variant="ghost" className="gap-2 mb-4 sm:mb-6 min-h-[44px]">
             <ArrowLeft className="w-4 h-4" />
-            Back to Reports
+            <span className="text-sm sm:text-base">Back to Reports</span>
           </Button>
         </Link>
 
         {/* Header */}
-        <Card className="border-2 mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{report.title}</h1>
-                  </div>
+        <Card className="border-2 mb-4 sm:mb-6">
+          <CardContent className="p-4 sm:p-6 pt-4 sm:pt-6">
+            <div className="flex flex-col gap-4">
+              {/* Title and Icon */}
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-6 h-6 text-blue-600" />
                 </div>
-                
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <Badge variant="secondary">{report.category}</Badge>
-                  <Badge variant={report.type === 'Recurring' ? 'default' : 'outline'}>
-                    {report.type}
-                  </Badge>
-                  <Badge className="bg-green-600">
-                    <Mail className="w-3 h-3 mr-1" />
-                    Sent to {report.email}
-                  </Badge>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    <span>Generated {report.dateGenerated}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4" />
-                    <span>{report.geography}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Target className="w-4 h-4" />
-                    <span>{report.subNiche}</span>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words mb-3">
+                    {report.title}
+                  </h1>
+                  
+                  {/* Badges */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="text-xs sm:text-sm">{report.category}</Badge>
+                    <Badge variant={report.type === 'Recurring' ? 'default' : 'outline'} className="text-xs sm:text-sm">
+                      {report.type}
+                    </Badge>
+                    <Badge className="bg-green-600 text-xs sm:text-sm">
+                      <Mail className="w-3 h-3 mr-1" />
+                      <span className="hidden sm:inline">Sent to </span>
+                      <span className="truncate max-w-[120px] sm:max-w-none">{report.email}</span>
+                    </Badge>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="default" size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700" onClick={handleShare}>
+              {/* Details */}
+              <div className="flex flex-col gap-2 text-xs sm:text-sm text-gray-600 pl-0 sm:pl-15">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
+                  <span>Generated {report.dateGenerated}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span className="break-words">{report.geography}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Target className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span className="break-words">{report.subNiche}</span>
+                </div>
+              </div>
+
+              {/* Share Button */}
+              <div className="pt-3 border-t border-gray-100">
+                <Button 
+                  variant="default" 
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[48px]" 
+                  onClick={handleShare}
+                >
                   <Share2 className="w-4 h-4" />
-                  Share
+                  <span className="text-sm sm:text-base">Share Report</span>
                 </Button>
               </div>
             </div>
@@ -204,33 +213,34 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Report Content */}
         <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-                <CardTitle>Market Intelligence Report</CardTitle>
-              </div>
-              <CardDescription>
-                Comprehensive analysis of {report.category} - {report.subNiche}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div 
-                className="prose prose-sm max-w-none
-                  prose-headings:text-gray-900 prose-headings:font-bold
-                  prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
-                  prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                  prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-                  prose-ul:my-4 prose-ul:space-y-2
-                  prose-li:text-gray-700
-                  prose-strong:text-gray-900 prose-strong:font-semibold
-                  prose-table:w-full prose-table:border-collapse
-                  prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:text-left
-                  prose-td:border prose-td:border-gray-300 prose-td:p-2"
-                dangerouslySetInnerHTML={{ __html: report.webReport }}
-              />
-            </CardContent>
-          </Card>
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <CardTitle className="text-base sm:text-lg">Market Intelligence Report</CardTitle>
+            </div>
+            <CardDescription className="text-xs sm:text-sm">
+              Comprehensive analysis of {report.category} - {report.subNiche}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div 
+              className="prose prose-sm max-w-none
+                prose-headings:text-gray-900 prose-headings:font-bold
+                prose-h2:text-lg sm:prose-h2:text-2xl prose-h2:mt-6 sm:prose-h2:mt-8 prose-h2:mb-3 sm:prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200
+                prose-h3:text-base sm:prose-h3:text-xl prose-h3:mt-4 sm:prose-h3:mt-6 prose-h3:mb-2 sm:prose-h3:mb-3
+                prose-p:text-gray-700 prose-p:text-sm sm:prose-p:text-base prose-p:leading-relaxed prose-p:mb-3 sm:prose-p:mb-4
+                prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-a:break-words
+                prose-ul:my-3 sm:prose-ul:my-4 prose-ul:space-y-1 sm:prose-ul:space-y-2
+                prose-li:text-gray-700 prose-li:text-sm sm:prose-li:text-base
+                prose-strong:text-gray-900 prose-strong:font-semibold
+                prose-table:w-full prose-table:border-collapse prose-table:text-xs sm:prose-table:text-sm
+                prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:text-left
+                prose-td:border prose-td:border-gray-300 prose-td:p-2
+                break-words"
+              dangerouslySetInnerHTML={{ __html: report.webReport }}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
